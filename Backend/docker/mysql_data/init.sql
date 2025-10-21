@@ -1,0 +1,162 @@
+-- *******************************************************************
+-- SCHEMA CƠ SỞ DỮ LIỆU MYSQL CHO ỨNG DỤNG CHAT (8 BẢNG)
+-- *******************************************************************
+
+-- Thiết lập Charset và Collation cho tiếng Việt và các ký tự đặc biệt
+SET NAMES utf8mb4;
+SET CHARACTER SET utf8mb4;
+
+-- 1. BẢNG USERS (NGƯỜI DÙNG)
+-- Chứa thông tin cơ bản của người dùng.
+-- Cột `deleted_at` được sử dụng cho chiến lược Soft Delete.
+-- Khi một tài khoản bị xóa (bởi user hoặc admin), ta cập nhật giá trị này
+-- thành TIMESTAMP hiện tại thay vì xóa hoàn toàn dòng dữ liệu.
+CREATE TABLE users (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY COMMENT 'ID duy nhất của người dùng',
+    username VARCHAR(255) NOT NULL UNIQUE COMMENT 'Tên đăng nhập / Tên hiển thị',
+    sdt VARCHAR(20) NOT NULL UNIQUE COMMENT 'Số điện thoại (dùng cho đăng nhập)',
+    avatar VARCHAR(512) NULL COMMENT 'Đường dẫn/URL đến ảnh đại diện',
+
+    -- Metadata
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT 'Thời điểm tạo tài khoản',
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'Thời điểm cập nhật gần nhất',
+
+    -- SOFT DELETE (XÓA MỀM)
+    deleted_at TIMESTAMP NULL DEFAULT NULL COMMENT 'Thời điểm người dùng bị đánh dấu xóa. NULL nếu tài khoản đang hoạt động.',
+    -- TRẠNG THÁI TẠM KHÓA (SUSPEND)
+    is_suspended BOOLEAN NOT NULL DEFAULT FALSE COMMENT 'TRUE nếu tài khoản bị tạm khóa (Suspend).'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 2. BẢNG FRIENDSHIPS (QUAN HỆ BẠN BÈ)
+-- Lưu trữ các cặp quan hệ bạn bè giữa hai người dùng.
+-- Cần có logic ứng dụng để luôn đảm bảo user_id_1 < user_id_2 để tránh trùng lặp cặp.
+CREATE TABLE friendships (
+    user_id_1 INT UNSIGNED NOT NULL COMMENT 'ID người dùng 1',
+    user_id_2 INT UNSIGNED NOT NULL COMMENT 'ID người dùng 2',
+    status ENUM('pending', 'accepted', 'blocked') NOT NULL DEFAULT 'pending' COMMENT 'Trạng thái: đang chờ, chấp nhận, đã chặn',
+    action_user_id INT UNSIGNED NOT NULL COMMENT 'ID của người dùng thực hiện hành động cuối cùng',
+
+    PRIMARY KEY (user_id_1, user_id_2),
+    
+    -- Foreign Keys: SỬ DỤNG ON DELETE NO ACTION (hoặc RESTRICT) để dữ liệu vẫn còn khi user bị Soft Delete.
+    FOREIGN KEY (user_id_1) REFERENCES users(id) ON DELETE RESTRICT,
+    FOREIGN KEY (user_id_2) REFERENCES users(id) ON DELETE RESTRICT,
+    FOREIGN KEY (action_user_id) REFERENCES users(id) ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 3. BẢNG GROUPS (NHÓM CHAT)
+-- Chứa thông tin về các nhóm chat.
+CREATE TABLE groups (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY COMMENT 'ID duy nhất của nhóm',
+    name VARCHAR(255) NOT NULL COMMENT 'Tên nhóm',
+    creator_id INT UNSIGNED NOT NULL COMMENT 'ID người tạo nhóm',
+    avatar VARCHAR(512) NULL COMMENT 'Ảnh đại diện nhóm',
+    
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT 'Thời điểm tạo nhóm',
+
+    FOREIGN KEY (creator_id) REFERENCES users(id) ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 4. BẢNG GROUP_MEMBERS (THÀNH VIÊN NHÓM)
+-- Liên kết người dùng với nhóm chat.
+CREATE TABLE group_members (
+    group_id INT UNSIGNED NOT NULL COMMENT 'ID nhóm',
+    member_id INT UNSIGNED NOT NULL COMMENT 'ID thành viên',
+    role ENUM('admin', 'member') NOT NULL DEFAULT 'member' COMMENT 'Vai trò trong nhóm',
+
+    PRIMARY KEY (group_id, member_id),
+
+    -- Foreign Keys: SỬ DỤNG ON DELETE CASCADE cho group_id (nếu nhóm bị xóa, thành viên bị xóa)
+    -- VÀ ON DELETE RESTRICT cho member_id (để bảo vệ dữ liệu khi user bị soft delete)
+    FOREIGN KEY (group_id) REFERENCES groups(id) ON DELETE CASCADE,
+    FOREIGN KEY (member_id) REFERENCES users(id) ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 5. BẢNG PRIVATE_MESSAGES (TIN NHẮN CÁ NHÂN)
+-- Lưu trữ lịch sử chat giữa hai người, hỗ trợ gửi kèm ảnh và file.
+CREATE TABLE private_messages (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY COMMENT 'ID duy nhất của tin nhắn',
+    sender_id INT UNSIGNED NOT NULL COMMENT 'ID người gửi',
+    receiver_id INT UNSIGNED NOT NULL COMMENT 'ID người nhận',
+    
+    -- Cột hỗ trợ đa phương tiện
+    message_type ENUM('text', 'image', 'file') NOT NULL DEFAULT 'text' COMMENT 'Loại tin nhắn: văn bản, ảnh, hoặc file',
+    media_url VARCHAR(512) NULL COMMENT 'URL của ảnh/file nếu message_type là image/file',
+    file_name VARCHAR(255) NULL COMMENT 'Tên gốc của file (chỉ dùng nếu message_type là file)',
+    
+    content TEXT NULL COMMENT 'Nội dung văn bản, hoặc chú thích (caption) cho ảnh/file',
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT 'Thời điểm gửi tin nhắn',
+    
+    FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE RESTRICT,
+    FOREIGN KEY (receiver_id) REFERENCES users(id) ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 6. BẢNG PRIVATE_CALLS (LỊCH SỬ GỌI 1:1)
+-- Ghi lại lịch sử cuộc gọi video/audio giữa hai người dùng.
+CREATE TABLE private_calls (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY COMMENT 'ID duy nhất của cuộc gọi',
+    caller_id INT UNSIGNED NOT NULL COMMENT 'ID người gọi',
+    receiver_id INT UNSIGNED NOT NULL COMMENT 'ID người nhận',
+    
+    call_type ENUM('audio', 'video') NOT NULL COMMENT 'Loại cuộc gọi: audio (thoại) hay video',
+    
+    -- Trạng thái có thể là: missed, completed, cancelled, failed
+    status ENUM('missed', 'completed', 'cancelled', 'failed') NOT NULL COMMENT 'Trạng thái cuộc gọi',
+
+    start_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Thời điểm bắt đầu cuộc gọi (hoặc thời điểm gọi)',
+    end_time TIMESTAMP NULL DEFAULT NULL COMMENT 'Thời điểm kết thúc cuộc gọi (NULL nếu bị nhỡ)',
+    
+    FOREIGN KEY (caller_id) REFERENCES users(id) ON DELETE RESTRICT,
+    FOREIGN KEY (receiver_id) REFERENCES users(id) ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 7. BẢNG GROUP_MESSAGES (TIN NHẮN NHÓM)
+-- Lưu trữ lịch sử chat trong nhóm, hỗ trợ gửi kèm ảnh và file.
+CREATE TABLE group_messages (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY COMMENT 'ID duy nhất của tin nhắn nhóm',
+    group_id INT UNSIGNED NOT NULL COMMENT 'ID nhóm',
+    sender_id INT UNSIGNED NOT NULL COMMENT 'ID người gửi',
+    
+    -- Cột hỗ trợ đa phương tiện
+    message_type ENUM('text', 'image', 'file') NOT NULL DEFAULT 'text' COMMENT 'Loại tin nhắn: văn bản, ảnh, hoặc file',
+    media_url VARCHAR(512) NULL COMMENT 'URL của ảnh/file nếu message_type là image/file',
+    file_name VARCHAR(255) NULL COMMENT 'Tên gốc của file (chỉ dùng nếu message_type là file)',
+
+    content TEXT NULL COMMENT 'Nội dung văn bản, hoặc chú thích (caption) cho ảnh/file',
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT 'Thời điểm gửi tin nhắn',
+    
+    FOREIGN KEY (group_id) REFERENCES groups(id) ON DELETE CASCADE,
+    FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 8. BẢNG GROUP_CALLS (LỊCH SỬ GỌI NHÓM)
+-- Ghi lại lịch sử cuộc gọi video/audio trong nhóm.
+CREATE TABLE group_calls (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY COMMENT 'ID duy nhất của cuộc gọi nhóm',
+    group_id INT UNSIGNED NOT NULL COMMENT 'ID nhóm',
+    initiator_id INT UNSIGNED NOT NULL COMMENT 'ID người khởi tạo cuộc gọi',
+    
+    call_type ENUM('audio', 'video') NOT NULL COMMENT 'Loại cuộc gọi: audio (thoại) hay video',
+    
+    -- Trạng thái đơn giản hơn: active (đang diễn ra) hoặc ended (đã kết thúc)
+    status ENUM('active', 'ended') NOT NULL COMMENT 'Trạng thái cuộc gọi',
+    
+    start_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Thời điểm bắt đầu cuộc gọi',
+    end_time TIMESTAMP NULL DEFAULT NULL COMMENT 'Thời điểm kết thúc cuộc gọi',
+    
+    FOREIGN KEY (group_id) REFERENCES groups(id) ON DELETE CASCADE,
+    FOREIGN KEY (initiator_id) REFERENCES users(id) ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+-- *******************************************************************
+-- CHIẾN LƯỢC XỬ LÝ KHI NGƯỜI DÙNG BỊ XÓA MỀM (SOFT DELETE) VÀ TẠM KHÓA
+-- *******************************************************************
+-- 1. TÀI KHOẢN HOẠT ĐỘNG: deleted_at IS NULL AND is_suspended = FALSE
+-- 2. KHOÁ TẠM THỜI (Suspend): deleted_at IS NULL AND is_suspended = TRUE
+--    Ví dụ: UPDATE users SET is_suspended = TRUE WHERE id = [user_id];
+-- 3. XÓA MỀM (Soft Delete): deleted_at IS NOT NULL
+--    Ví dụ: UPDATE users SET deleted_at = NOW(), is_suspended = TRUE WHERE id = [user_id]; 
+--    (Nên set is_suspended=TRUE luôn khi xóa mềm để đảm bảo người dùng không thể đăng nhập lại)
+-- 4. Vì các bảng khác sử dụng khóa ngoại ON DELETE RESTRICT, các dòng dữ liệu lịch sử vẫn được giữ lại.
+-- 5. Logic ứng dụng (backend/frontend) phải được điều chỉnh để kiểm tra cả 2 cột `deleted_at` và `is_suspended` trước khi cho phép đăng nhập hoặc tương tác.
