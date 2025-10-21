@@ -1,0 +1,14 @@
+# Luôn thống nhất cách xuống dòng
+* text=auto
+
+# Dành cho Windows scripts
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Dành cho Linux/Mac scripts
+*.sh text eol=lf
+
+# Java, properties, xml... dùng LF (chuẩn Linux)
+*.java text eol=lf
+*.xml text eol=lf
+*.properties text eol=lf
