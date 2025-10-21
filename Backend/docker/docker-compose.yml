@@ -1,20 +1,18 @@
 version: '3.9'
 
 services:
-  mysql:
-    image: mysql:8.0
-    container_name: mysql_chat_server
+  backend:
+    build: .
+    container_name: backend_chat
     restart: always
-    environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: chat_app
-      MYSQL_USER: user
-      MYSQL_PASSWORD: 123456
     ports:
-      - "3306:3306"
-    volumes:
-      - ./mysql_data:/var/lib/mysql
-      - ./init_db:/docker-entrypoint-initdb.d
+      - "8080:8080"
+    environment:
+      DB_HOST: host.docker.internal
+      DB_PORT: 3306
+      DB_USER: root
+      DB_PASS: ""
+      DB_NAME: chat_app
     networks:
       - chat_network
 
