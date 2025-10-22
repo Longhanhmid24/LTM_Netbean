@@ -1,4 +1,5 @@
-package com.app.chatserver.repository;
+package com.app.chatserver.Repository;
+
 
 import com.app.chatserver.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;

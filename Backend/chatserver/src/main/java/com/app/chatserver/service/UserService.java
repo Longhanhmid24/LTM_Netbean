@@ -1,7 +1,8 @@
 package com.app.chatserver.service;
 
 import com.app.chatserver.model.User;
-import com.app.chatserver.repository.UserRepository;
+import com.app.chatserver.Repository.UserRepository;
+
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
