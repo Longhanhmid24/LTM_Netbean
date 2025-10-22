@@ -1,48 +1,59 @@
 package com.app.chatserver.service;
 
 import com.app.chatserver.model.User;
+import com.app.chatserver.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
 
 @Service
 public class UserService {
 
-    private final Map<Integer, User> users = new HashMap<>();
-    private int nextId = 1;
+    private final UserRepository userRepository;
 
-    // Tạo user
+    public UserService(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
+
+    // Tạo user mới
     public User createUser(User user) {
-        user.setId(nextId++);
-        users.put(user.getId(), user);
-        return user;
+        user.setCreatedAt(LocalDateTime.now());
+        user.setUpdatedAt(LocalDateTime.now());
+        return userRepository.save(user);
     }
 
     // Lấy tất cả user
     public List<User> getAllUsers() {
-        return new ArrayList<>(users.values());
+        return userRepository.findAll();
     }
 
     // Lấy user theo ID
     public User getUserById(int id) {
-        return users.get(id);
+        Optional<User> userOpt = userRepository.findById(id);
+        return userOpt.orElse(null);
     }
 
     // Cập nhật user
-    public User updateUser(int id, User updated) {
-        User existing = users.get(id);
-        if (existing != null) {
-            existing.setUsername(updated.getUsername());
-            existing.setEmail(updated.getEmail());
-            existing.setPassword(updated.getPassword());
-            existing.setFullname(updated.getFullname());
-            existing.setAvatar(updated.getAvatar());
-        }
-        return existing;
+    public User updateUser(int id, User updatedUser) {
+        return userRepository.findById(id).map(user -> {
+            user.setUsername(updatedUser.getUsername());
+            user.setSdt(updatedUser.getSdt());
+            user.setPassword(updatedUser.getPassword());
+            user.setAvatar(updatedUser.getAvatar());
+            user.setUpdatedAt(LocalDateTime.now());
+            user.setIsSuspended(updatedUser.getIsSuspended());
+            return userRepository.save(user);
+        }).orElse(null);
     }
 
-    // Xóa user
+    // Xóa user (gán deletedAt)
     public boolean deleteUser(int id) {
-        return users.remove(id) != null;
+        return userRepository.findById(id).map(user -> {
+            user.setDeletedAt(LocalDateTime.now());
+            userRepository.save(user);
+            return true;
+        }).orElse(false);
     }
 }
