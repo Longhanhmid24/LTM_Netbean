@@ -1,4 +1,4 @@
-package com.app.chatserver.security;
+package com.app.chatserver.Config;
 
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.web.bind.annotation.GetMapping;

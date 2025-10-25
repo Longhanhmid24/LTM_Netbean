@@ -1,4 +1,4 @@
-package com.app.chatserver.security;
+package com.app.chatserver.Config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -19,6 +19,7 @@ public class SecurityConfig {
             // ✅ Cho phép Swagger và API public
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(
+                    "/ws/**", 
                     "/swagger-ui.html",
                     "/swagger-ui/**",
                     "/v3/api-docs/**",
