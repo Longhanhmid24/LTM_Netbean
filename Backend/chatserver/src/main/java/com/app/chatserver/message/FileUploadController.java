@@ -6,13 +6,13 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.net.*;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
 import java.nio.file.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/upload")
@@ -27,62 +27,44 @@ public class FileUploadController {
             return ResponseEntity.badRequest().body("File rỗng");
         }
 
-        // Đảm bảo thư mục uploads tồn tại
+        // Tạo thư mục nếu chưa có
         Files.createDirectories(Paths.get(UPLOAD_DIR));
 
-        // Tạo tên file duy nhất
+        // Đặt tên file duy nhất
         String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
-        String fileName = timestamp + "_" + StringUtils.cleanPath(file.getOriginalFilename());
+        String originalName = file.getOriginalFilename();
+        if (originalName == null) {
+            originalName = "unknown";
+        }
+        String fileName = timestamp + "_" + StringUtils.cleanPath(originalName);
         Path path = Paths.get(UPLOAD_DIR + fileName);
 
-        // Lưu file vào thư mục uploads
+        // Lưu file
         Files.copy(file.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
 
-        // Lấy IP mạng LAN thực tế của máy server
-        String serverIp = getLocalIp();
-        String fileUrl = "http://" + serverIp + ":8080/" + UPLOAD_DIR + fileName;
+        // Sử dụng IP của máy thật nơi chạy server
+        String fileUrl = "http://192.168.1.230:8080/uploads/" + fileName;
 
-        // Xác định loại file (image, video, file khác)
-        String contentType = file.getContentType();
-        String fileType = detectFileType(contentType);
-
-        // Trả về JSON chi tiết
-        Map<String, Object> response = new HashMap<>();
-        response.put("url", fileUrl);
-        response.put("fileName", fileName);
-        response.put("fileType", fileType);
-        response.put("sizeKB", file.getSize() / 1024);
-
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok().body("{\"url\":\"" + fileUrl + "\",\"fileName\":\"" + fileName + "\"}");
     }
 
-    // 🔍 Hàm tự động lấy IP LAN (ưu tiên IPv4 thật, tránh 127.0.0.1)
-    private String getLocalIp() {
-        try {
-            Enumeration<NetworkInterface> nics = NetworkInterface.getNetworkInterfaces();
-            while (nics.hasMoreElements()) {
-                NetworkInterface nic = nics.nextElement();
-                if (!nic.isUp() || nic.isLoopback() || nic.isVirtual()) continue;
-
-                Enumeration<InetAddress> addrs = nic.getInetAddresses();
-                while (addrs.hasMoreElements()) {
-                    InetAddress addr = addrs.nextElement();
-                    if (addr instanceof Inet4Address && !addr.isLoopbackAddress()) {
-                        return addr.getHostAddress();
-                    }
+private String getLocalIpAddress() {
+    try {
+        Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
+        while (interfaces.hasMoreElements()) {
+            NetworkInterface ni = interfaces.nextElement();
+            if (ni.isLoopback() || !ni.isUp()) continue;
+            Enumeration<java.net.InetAddress> addresses = ni.getInetAddresses();
+            while (addresses.hasMoreElements()) {
+                InetAddress addr = addresses.nextElement();
+                if (!addr.isLoopbackAddress() && addr instanceof java.net.Inet4Address) {
+                    return addr.getHostAddress();
                 }
             }
-        } catch (SocketException e) {
-            e.printStackTrace();
         }
-        return "localhost"; // fallback
+    } catch (SocketException e) {
+        e.printStackTrace();
     }
-
-    // Xác định loại file (ảnh, video, hoặc file)
-    private String detectFileType(String mime) {
-        if (mime == null) return "file";
-        if (mime.startsWith("image/")) return "image";
-        if (mime.startsWith("video/")) return "video";
-        return "file";
-    }
+    return "localhost";
+}
 }

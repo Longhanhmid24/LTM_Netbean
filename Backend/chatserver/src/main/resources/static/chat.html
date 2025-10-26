@@ -137,7 +137,9 @@
 
 <script>
   let stompClient = null;
-  const serverIp = "10.15.4.231"; // 🧠 IP LAN của máy thật (server)
+  // ✅ Lấy IP tự động từ trang đang truy cập
+  const serverIp = window.location.hostname || "localhost";
+
   const userId = Number(prompt("Nhập ID của bạn (1 hoặc 2):"));
   const receiverId = userId === 1 ? 2 : 1;
 
