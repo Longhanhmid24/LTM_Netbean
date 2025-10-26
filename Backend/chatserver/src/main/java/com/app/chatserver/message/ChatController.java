@@ -1,4 +1,4 @@
-package com.app.chatserver.websocket;
+package com.app.chatserver.message;
 
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessagingTemplate;

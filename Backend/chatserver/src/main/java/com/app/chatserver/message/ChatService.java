@@ -1,4 +1,4 @@
-package com.app.chatserver.websocket;
+package com.app.chatserver.message;
 
 import com.app.chatserver.model.User;
 import com.app.chatserver.Repository.UserRepository;

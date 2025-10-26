@@ -1,4 +1,4 @@
-package com.app.chatserver.message;
+package com.app.chatserver.media_file;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;

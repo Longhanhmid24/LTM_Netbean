@@ -1,4 +1,4 @@
-package com.app.chatserver.websocket;
+package com.app.chatserver.message;
 
 import lombok.Data;
 import java.time.LocalDateTime;
