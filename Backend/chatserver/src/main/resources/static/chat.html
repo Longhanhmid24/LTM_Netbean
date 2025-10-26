@@ -204,13 +204,22 @@
         progressBar.style.width = "0%";
 
         if (xhr.status === 200) {
-          const res = JSON.parse(xhr.responseText); // 🧠 backend trả JSON
+          const res = JSON.parse(xhr.responseText);
           console.log("📁 Upload thành công:", res);
+
+          // ✅ Nếu backend không trả fileType, tự đoán dựa vào MIME
+          let fileType = res.fileType;
+          if (!fileType || fileType === "undefined") {
+            const mime = file.type;
+            if (mime.startsWith("image/")) fileType = "image";
+            else if (mime.startsWith("video/")) fileType = "video";
+            else fileType = "file";
+          }
 
           const msg = {
             senderId: userId,
             receiverId: receiverId,
-            messageType: res.fileType,
+            messageType: fileType,
             mediaUrl: res.url,
             fileName: res.fileName
           };
@@ -235,13 +244,6 @@
     }
   }
 
-  // ✅ Xác định loại file
-  function detectFileType(mime) {
-    if (mime.startsWith("image/")) return "image";
-    if (mime.startsWith("video/")) return "video";
-    return "file";
-  }
-
   // ✅ Hiển thị tin nhắn ra màn hình
   function appendMessage(type, msg) {
     const chatBox = document.getElementById("chat-box");
@@ -251,12 +253,13 @@
     const msgDiv = document.createElement("div");
     msgDiv.classList.add("msg", type);
 
+    // ✅ Sửa hiển thị ảnh / video / file
     if (msg.messageType === "text") {
       msgDiv.textContent = msg.content;
     } else if (msg.messageType === "image") {
-      msgDiv.innerHTML = `<img src="${msg.mediaUrl}" width="220" style="border-radius:10px; max-width:100%;">`;
+      msgDiv.innerHTML = `<img src="${msg.mediaUrl}" style="width:230px; border-radius:10px; max-width:100%;">`;
     } else if (msg.messageType === "video") {
-      msgDiv.innerHTML = `<video controls width="250"><source src="${msg.mediaUrl}" type="video/mp4"></video>`;
+      msgDiv.innerHTML = `<video controls width="250" style="border-radius:10px;"><source src="${msg.mediaUrl}" type="video/mp4"></video>`;
     } else {
       msgDiv.innerHTML = `
         <a href="${msg.mediaUrl}" target="_blank"

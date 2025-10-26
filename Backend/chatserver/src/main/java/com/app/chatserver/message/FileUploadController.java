@@ -33,38 +33,56 @@ public class FileUploadController {
         // Đặt tên file duy nhất
         String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
         String originalName = file.getOriginalFilename();
-        if (originalName == null) {
-            originalName = "unknown";
+        if (originalName == null) originalName = "unknown";
+
+        // Ép .jfif → .jpg
+        if (originalName.toLowerCase().endsWith(".jfif")) {
+            originalName = originalName.substring(0, originalName.length() - 5) + ".jpg";
         }
+
         String fileName = timestamp + "_" + StringUtils.cleanPath(originalName);
         Path path = Paths.get(UPLOAD_DIR + fileName);
-
-        // Lưu file
         Files.copy(file.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
 
-        // Sử dụng IP của máy thật nơi chạy server
-        String fileUrl = "http://192.168.1.230:8080/uploads/" + fileName;
+        // ✅ Xác định loại file (ảnh / video / file)
+        String contentType = file.getContentType();
+        String fileType = "file";
+        if (contentType != null) {
+            if (contentType.startsWith("image/")) fileType = "image";
+            else if (contentType.startsWith("video/")) fileType = "video";
+        }
 
-        return ResponseEntity.ok().body("{\"url\":\"" + fileUrl + "\",\"fileName\":\"" + fileName + "\"}");
+        // ✅ Lấy IP LAN thật (VD: 192.168.1.230)
+        String serverIp = getLocalIpAddress();
+        String fileUrl = "http://" + serverIp + ":8080/uploads/" + fileName;
+
+        // ✅ Trả JSON
+        String jsonResponse = String.format(
+                "{\"url\":\"%s\",\"fileName\":\"%s\",\"fileType\":\"%s\"}",
+                fileUrl, fileName, fileType
+        );
+
+        return ResponseEntity.ok().body(jsonResponse);
     }
 
-private String getLocalIpAddress() {
-    try {
-        Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
-        while (interfaces.hasMoreElements()) {
-            NetworkInterface ni = interfaces.nextElement();
-            if (ni.isLoopback() || !ni.isUp()) continue;
-            Enumeration<java.net.InetAddress> addresses = ni.getInetAddresses();
-            while (addresses.hasMoreElements()) {
-                InetAddress addr = addresses.nextElement();
-                if (!addr.isLoopbackAddress() && addr instanceof java.net.Inet4Address) {
-                    return addr.getHostAddress();
+    // ✅ Tự động lấy IP LAN
+    private String getLocalIpAddress() {
+        try {
+            Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
+            while (interfaces.hasMoreElements()) {
+                NetworkInterface ni = interfaces.nextElement();
+                if (ni.isLoopback() || !ni.isUp()) continue;
+                Enumeration<java.net.InetAddress> addresses = ni.getInetAddresses();
+                while (addresses.hasMoreElements()) {
+                    InetAddress addr = addresses.nextElement();
+                    if (!addr.isLoopbackAddress() && addr instanceof java.net.Inet4Address) {
+                        return addr.getHostAddress();
+                    }
                 }
             }
+        } catch (SocketException e) {
+            e.printStackTrace();
         }
-    } catch (SocketException e) {
-        e.printStackTrace();
+        return "localhost";
     }
-    return "localhost";
-}
 }
