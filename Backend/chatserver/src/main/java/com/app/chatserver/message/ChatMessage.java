@@ -9,7 +9,7 @@ public class ChatMessage {
     private int senderId;
     private int receiverId;
     private String content;
-    private String messageType; // text / image / file
+    private String messageType; // text / image / file / video
     private String mediaUrl;
     private String fileName;
     private LocalDateTime timestamp;

@@ -1,4 +1,4 @@
-package com.app.chatserver.message;
+package com.app.chatserver.media_file;
 
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.*;

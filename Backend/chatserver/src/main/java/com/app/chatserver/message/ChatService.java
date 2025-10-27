@@ -7,6 +7,9 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 
+// ✅ THÊM DÒNG NÀY
+import com.app.chatserver.message.ChatMessage;
+
 @Service
 public class ChatService {
 
