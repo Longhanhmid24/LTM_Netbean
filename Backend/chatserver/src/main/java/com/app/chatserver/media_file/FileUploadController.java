@@ -1,4 +1,4 @@
-package com.app.chatserver.message;
+package com.app.chatserver.media_file;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
@@ -42,7 +42,14 @@ public class FileUploadController {
 
         String fileName = timestamp + "_" + StringUtils.cleanPath(originalName);
         Path path = Paths.get(UPLOAD_DIR + fileName);
-        Files.copy(file.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
+        try {
+            Files.copy(file.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
+            System.out.println("[FileUploadController] Saved file to: " + path.toAbsolutePath());
+        } catch (IOException e) {
+            System.err.println("[FileUploadController] Failed to save file: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("Lỗi lưu file");
+        }
 
         // ✅ Xác định loại file (ảnh / video / file)
         String contentType = file.getContentType();
@@ -52,17 +59,18 @@ public class FileUploadController {
             else if (contentType.startsWith("video/")) fileType = "video";
         }
 
-        // ✅ Lấy IP LAN thật (VD: 192.168.1.230)
-        String serverIp = getLocalIpAddress();
-        String fileUrl = "http://" + serverIp + ":8080/uploads/" + fileName;
+    // ✅ Lấy IP LAN thật (VD: 192.168.1.230)
+    String serverIp = getLocalIpAddress();
+    String fileUrl = "http://" + serverIp + ":8080/uploads/" + fileName;
+    System.out.println("[FileUploadController] fileUrl=" + fileUrl);
 
         // ✅ Trả JSON
-        String jsonResponse = String.format(
-                "{\"url\":\"%s\",\"fileName\":\"%s\",\"fileType\":\"%s\"}",
-                fileUrl, fileName, fileType
-        );
+    String jsonResponse = String.format(
+        "{\"url\":\"%s\",\"fileName\":\"%s\",\"fileType\":\"%s\",\"contentType\":\"%s\"}",
+        fileUrl, fileName, fileType, contentType == null ? "" : contentType
+    );
 
-        return ResponseEntity.ok().body(jsonResponse);
+    return ResponseEntity.ok().body(jsonResponse);
     }
 
     // ✅ Tự động lấy IP LAN

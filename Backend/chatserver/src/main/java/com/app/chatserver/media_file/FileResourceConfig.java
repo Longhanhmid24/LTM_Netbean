@@ -13,12 +13,13 @@ public class FileResourceConfig implements WebMvcConfigurer {
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         // ✅ Lấy đường dẫn tuyệt đối tới thư mục uploads trong project
-        Path uploadDir = Paths.get(System.getProperty("user.dir"), "uploads");
-        String uploadPath = uploadDir.toFile().getAbsolutePath();
+    Path uploadDir = Paths.get(System.getProperty("user.dir"), "uploads");
+    String uploadLocation = uploadDir.toUri().toString(); // e.g. file:///D:/.../uploads/
 
-        System.out.println("✅ Serving static files from: file:" + uploadPath + "/");
+    System.out.println("✅ Serving static files from: " + uploadLocation);
 
-        registry.addResourceHandler("/uploads/**")
-                .addResourceLocations("file:" + uploadPath + "/");
+    registry.addResourceHandler("/uploads/**")
+        .addResourceLocations(uploadLocation)
+        .setCachePeriod(0);
     }
 }

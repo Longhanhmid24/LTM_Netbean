@@ -1,4 +1,4 @@
-package com.app.chatserver.websocket;
+package com.app.chatserver.message;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
@@ -14,6 +14,10 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         registry.addEndpoint("/ws")
                 .setAllowedOriginPatterns("*") // Cho phép mọi domain (nên giới hạn khi deploy)
                 .withSockJS(); // Dự phòng nếu browser không hỗ trợ WebSocket
+        // ✅ Endpoint 2: Dành cho Java Client (Raw WebSocket)
+        // Client Java Swing sẽ kết nối vào đây.
+        registry.addEndpoint("/ws/raw") // Endpoint mới
+                .setAllowedOriginPatterns("*"); // KHÔNG .withSockJS()
     }
 
     @Override

@@ -24,14 +24,22 @@ public class ChatService {
             (sender_id, receiver_id, message_type, media_url, file_name, content, timestamp)
             VALUES (?, ?, ?, ?, ?, ?, ?)
         """;
-        jdbcTemplate.update(sql,
-                message.getSenderId(),
-                message.getReceiverId(),
-                message.getMessageType(),
-                message.getMediaUrl(),
-                message.getFileName(),
-                message.getContent(),
-                LocalDateTime.now()
-        );
+        try {
+            jdbcTemplate.update(sql,
+                    message.getSenderId(),
+                    message.getReceiverId(),
+                    message.getMessageType(),
+                    message.getMediaUrl(),
+                    message.getFileName(),
+                    message.getContent(),
+                    LocalDateTime.now()
+            );
+            System.out.println("[ChatService] Saved message to DB: sender=" + message.getSenderId()
+                    + " receiver=" + message.getReceiverId()
+                    + " type=" + message.getMessageType());
+        } catch (Exception ex) {
+            System.err.println("[ChatService] Failed to save message to DB: " + ex.getMessage());
+            ex.printStackTrace();
+        }
     }
 }

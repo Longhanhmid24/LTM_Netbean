@@ -221,7 +221,8 @@
             receiverId: receiverId,
             messageType: fileType,
             mediaUrl: res.url,
-            fileName: res.fileName
+            fileName: res.fileName,
+            contentType: res.contentType
           };
 
           stompClient.send("/app/chat.send", {}, JSON.stringify(msg));
@@ -259,7 +260,12 @@
     } else if (msg.messageType === "image") {
       msgDiv.innerHTML = `<img src="${msg.mediaUrl}" style="width:230px; border-radius:10px; max-width:100%;">`;
     } else if (msg.messageType === "video") {
-      msgDiv.innerHTML = `<video controls width="250" style="border-radius:10px;"><source src="${msg.mediaUrl}" type="video/mp4"></video>`;
+      // Do not force a specific type — use what backend returns (msg.contentType) if available
+      if (msg.contentType) {
+        msgDiv.innerHTML = `<video controls width="250" style="border-radius:10px;"><source src="${msg.mediaUrl}" type="${msg.contentType}"></video>`;
+      } else {
+        msgDiv.innerHTML = `<video controls width="250" style="border-radius:10px;"><source src="${msg.mediaUrl}"></video>`;
+      }
     } else {
       msgDiv.innerHTML = `
         <a href="${msg.mediaUrl}" target="_blank"
