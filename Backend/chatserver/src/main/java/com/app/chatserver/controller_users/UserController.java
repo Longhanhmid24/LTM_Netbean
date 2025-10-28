@@ -1,7 +1,8 @@
-package com.app.chatserver.controller;
+package com.app.chatserver.controller_users;
 
 import com.app.chatserver.model.User;
-import com.app.chatserver.service.UserService;
+import com.app.chatserver.users.UserService;
+
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
