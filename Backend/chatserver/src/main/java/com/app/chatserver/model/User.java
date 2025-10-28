@@ -9,43 +9,51 @@ public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
     private Integer id;
 
-    @Column(name = "username", nullable = false, unique = true)
+    @Column(nullable = false, unique = true)
     private String username;
 
-    @Column(name = "sdt", nullable = false, unique = true)
+    @Column(nullable = false, unique = true)
     private String sdt;
 
-    @Column(name = "password", nullable = false)  // Thêm password field
+    @Column(nullable = false)
     private String password;
 
-    @Column(name = "avatar")
     private String avatar;
 
     @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private LocalDateTime createdAt;
 
     @Column(name = "updated_at", nullable = false)
-    private LocalDateTime updatedAt = LocalDateTime.now();
+    private LocalDateTime updatedAt;
 
-    @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
     @Column(name = "is_suspended", nullable = false)
     private Boolean isSuspended = false;
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
 
     public User() {}
 
     public User(String username, String sdt, String password, String avatar) {
         this.username = username;
         this.sdt = sdt;
-        this.password = password;  // Raw password, hash in service
+        this.password = password;
         this.avatar = avatar;
     }
 
-    // Getters/Setters (thêm password)
+    // Getters/Setters
     public Integer getId() { return id; }
     public void setId(Integer id) { this.id = id; }
 

@@ -5,6 +5,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Configuration
 @EnableWebSecurity
@@ -16,7 +18,7 @@ public class SecurityConfig {
             // ✅ Tắt CSRF cho API/WebSocket
             .csrf(csrf -> csrf.disable())
 
-            // ✅ Cho phép tất cả endpoint public (kể cả uploads, error)
+            // ✅ Cho phép tất cả endpoint public (API, uploads, swagger, websocket)
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(
                     "/ws/**",
@@ -25,17 +27,17 @@ public class SecurityConfig {
                     "/v3/api-docs/**",
                     "/v3/api-docs.yaml",
                     "/api/**",
-                    "/uploads/**",   // 🟢 mở quyền truy cập static file
-                    "/error"         // 🟢 tránh vòng lặp lỗi error
+                    "/uploads/**",
+                    "/error"
                 ).permitAll()
                 .anyRequest().permitAll()
             )
 
-            // ✅ Tắt form login & basic auth mặc định
+            // ✅ Tắt form login & basic auth
             .formLogin(form -> form.disable())
             .httpBasic(basic -> basic.disable())
 
-            // ✅ Xử lý lỗi trả về dạng JSON thay vì view
+            // ✅ Trả lỗi dạng JSON
             .exceptionHandling(ex -> ex
                 .accessDeniedHandler((req, res, e) -> {
                     res.setStatus(403);
@@ -50,5 +52,11 @@ public class SecurityConfig {
             );
 
         return http.build();
+    }
+
+    // ✅ Bean mã hoá mật khẩu (được UserService dùng)
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
     }
 }

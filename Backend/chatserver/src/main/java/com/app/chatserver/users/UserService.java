@@ -20,40 +20,51 @@ public class UserService {
         this.passwordEncoder = passwordEncoder;
     }
 
-    // Tạo user mới — hash password trước khi lưu
-    public User createUser(User user) {
-        user.setCreatedAt(LocalDateTime.now());
-        user.setUpdatedAt(LocalDateTime.now());
+// 🟢 Tạo user mới — hash password + kiểm tra trùng SĐT
+public User createUser(User user) {
+    user.setCreatedAt(LocalDateTime.now());
+    user.setUpdatedAt(LocalDateTime.now());
 
-        // Hash password (chỉ nếu có password non-null)
-        if (user.getPassword() != null && !user.getPassword().isBlank()) {
-            String hashed = passwordEncoder.encode(user.getPassword());
-            user.setPassword(hashed);
-        }
+    // ✅ Kiểm tra trùng SĐT (chỉ kiểm tra số điện thoại)
+    boolean phoneExists = userRepository.findAll().stream()
+            .anyMatch(u -> u.getSdt().equals(user.getSdt()));
 
-        return userRepository.save(user);
+    if (phoneExists) {
+        throw new IllegalArgumentException("Số điện thoại đã được sử dụng");
     }
 
-    // Lấy tất cả user
+    // ✅ Hash password (nếu có)
+    if (user.getPassword() != null && !user.getPassword().isBlank()) {
+        String hashed = passwordEncoder.encode(user.getPassword());
+        user.setPassword(hashed);
+    } else {
+        throw new IllegalArgumentException("Mật khẩu không được để trống");
+    }
+
+    return userRepository.save(user);
+}
+
+    // 🔹 Lấy tất cả user
     public List<User> getAllUsers() {
         return userRepository.findAll();
     }
 
-    // Lấy user theo ID
+    // 🔹 Lấy user theo ID
     public User getUserById(int id) {
         Optional<User> userOpt = userRepository.findById(id);
         return userOpt.orElse(null);
     }
 
-    // Cập nhật user — nếu có password mới thì hash
+    // 🔹 Cập nhật user — nếu có password mới thì hash lại
     public User updateUser(int id, User updatedUser) {
         return userRepository.findById(id).map(user -> {
             user.setUsername(updatedUser.getUsername());
             user.setSdt(updatedUser.getSdt());
-            // Nếu client gửi password mới (không rỗng) -> hash và cập nhật
+
             if (updatedUser.getPassword() != null && !updatedUser.getPassword().isBlank()) {
                 user.setPassword(passwordEncoder.encode(updatedUser.getPassword()));
             }
+
             user.setAvatar(updatedUser.getAvatar());
             user.setUpdatedAt(LocalDateTime.now());
             user.setIsSuspended(updatedUser.getIsSuspended());
@@ -61,7 +72,7 @@ public class UserService {
         }).orElse(null);
     }
 
-    // Xóa user (gán deletedAt)
+    // 🔹 Xóa user (soft delete)
     public boolean deleteUser(int id) {
         return userRepository.findById(id).map(user -> {
             user.setDeletedAt(LocalDateTime.now());
