@@ -442,73 +442,76 @@ public class ChatForm extends JPanel {
 
     // --- UI Helper Methods ---
     
-    private void addMessageBubble(ChatMessage msg, boolean alignRight) {
-        if (msg == null) return;
-        RoundedBubblePanel bubble = new RoundedBubblePanel(20, 20);
-        bubble.setLayout(new BorderLayout(5, 3)); 
-        bubble.setBackground(alignRight ? new Color(225, 245, 255) : new Color(240, 240, 240)); 
-        bubble.setBorder(BorderFactory.createEmptyBorder(6, 10, 6, 10)); 
-        bubble.setOpaque(false);
-        String bubbleStyle = "width: 350px; max-width: 100%;"; 
-        Component contentComponent;
+    // Trong ChatForm.java
+private void addMessageBubble(ChatMessage msg, boolean alignRight) {
+    if (msg == null) return;
+    RoundedBubblePanel bubble = new RoundedBubblePanel(20, 20);
+    bubble.setLayout(new BorderLayout(5, 3)); 
+    bubble.setBackground(alignRight ? new Color(225, 245, 255) : new Color(240, 240, 240)); 
+    bubble.setBorder(BorderFactory.createEmptyBorder(6, 10, 6, 10)); 
+    bubble.setOpaque(false);
+    String bubbleStyle = "width: 350px; max-width: 100%;"; 
+    Component contentComponent;
 
-        String text = msg.getDecryptedContent();
-        String url = msg.getDecryptedMediaUrl();
-        String name = msg.getDecryptedFileName();
+    String text = msg.getDecryptedContent();
+    String url = msg.getDecryptedMediaUrl();
+    String name = msg.getDecryptedFileName();
 
-        try {
-            boolean isContentError = DECRYPT_ERROR_PLACEHOLDER.equals(text);
-            
-            if (isContentError) {
-                 JLabel errorLabel = new JLabel(DECRYPT_ERROR_PLACEHOLDER); 
-                 errorLabel.setFont(new Font("Segoe UI", Font.ITALIC, 14)); 
-                 errorLabel.setForeground(Color.RED); 
-                 errorLabel.setOpaque(false); 
-                 contentComponent = errorLabel;
-            } else if ("text".equals(msg.getMessageType()) && text != null && !text.trim().isEmpty()) {
-                String escapedHtml = text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\n", "<br>");
-                JLabel textLabel = new JLabel("<html><body style='" + bubbleStyle + "'>" + escapedHtml + "</body></html>"); 
-                textLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16)); 
-                textLabel.setOpaque(false); 
-                contentComponent = textLabel;
-            } else if (url != null && "image".equals(msg.getMessageType())) {
-                contentComponent = createImageLabel(url);
-            } else if (url != null && ("video".equals(msg.getMessageType()) || "audio".equals(msg.getMessageType()) || "file".equals(msg.getMessageType()))) {
-                String fileNameToShow = (name == null) ? "[File]" : name;
-                contentComponent = createLinkLabel(fileNameToShow, url, "video".equals(msg.getMessageType()), "audio".equals(msg.getMessageType()));
-            } else { 
-                 JLabel fallbackLabel = new JLabel("[Unsupported message]");
-                 fallbackLabel.setFont(new Font("Segoe UI", Font.ITALIC, 14)); 
-                 fallbackLabel.setForeground(Color.GRAY); 
-                 fallbackLabel.setOpaque(false);
-                 contentComponent = fallbackLabel;
-            }
-        } catch (Exception e) { 
-            JLabel errorLabel = new JLabel("[Display Error]"); 
+    try {
+        boolean isContentError = DECRYPT_ERROR_PLACEHOLDER.equals(text);
+        
+        if (isContentError) {
+            JLabel errorLabel = new JLabel(DECRYPT_ERROR_PLACEHOLDER); 
+            errorLabel.setFont(new Font("Segoe UI", Font.ITALIC, 14)); 
             errorLabel.setForeground(Color.RED); 
             errorLabel.setOpaque(false); 
-            contentComponent = errorLabel; 
-        }
-
-        bubble.add(contentComponent, BorderLayout.CENTER);
-        ZonedDateTime timestamp = msg.getTimestamp();
-        if (timestamp != null) { 
-            JLabel timeLabel = new JLabel(timestamp.format(DateTimeFormatter.ofPattern("HH:mm"))); 
-            timeLabel.setFont(new Font("Segoe UI", Font.PLAIN, 10)); 
-            timeLabel.setForeground(Color.DARK_GRAY); 
-            timeLabel.setHorizontalAlignment(alignRight ? 4 : 2); 
-            timeLabel.setBorder(BorderFactory.createEmptyBorder(2, 2, 0, 2)); 
-            timeLabel.setOpaque(false); 
-            bubble.add(timeLabel, BorderLayout.SOUTH); 
+            contentComponent = errorLabel;
+        } else if ("text".equals(msg.getMessageType()) && text != null && !text.trim().isEmpty()) {
+            String escapedHtml = text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\n", "<br>");
+            JLabel textLabel = new JLabel("<html><body style='" + bubbleStyle + "'>" + escapedHtml + "</body></html>"); 
+            textLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16)); 
+            textLabel.setOpaque(false); 
+            contentComponent = textLabel;
+        } else if (url != null && "image".equals(msg.getMessageType())) {
+            contentComponent = createImageLabel(url);
+        } else if (url != null && ("video".equals(msg.getMessageType()) || "audio".equals(msg.getMessageType()) || "file".equals(msg.getMessageType()))) {
+            String fileNameToShow = (name == null) ? "[File]" : name;
+            contentComponent = createLinkLabel(fileNameToShow, url, "video".equals(msg.getMessageType()), "audio".equals(msg.getMessageType()));
         } else { 
-            bubble.add(Box.createVerticalStrut(12), BorderLayout.SOUTH); 
+            JLabel fallbackLabel = new JLabel("[Unsupported message]");
+            fallbackLabel.setFont(new Font("Segoe UI", Font.ITALIC, 14)); 
+            fallbackLabel.setForeground(Color.GRAY); 
+            fallbackLabel.setOpaque(false);
+            contentComponent = fallbackLabel;
         }
-        JPanel wrapper = new JPanel(new FlowLayout(alignRight ? 4 : 0, 0, 2)); 
-        wrapper.setBackground(Color.WHITE); 
-        wrapper.add(bubble); 
-        wrapper.setMaximumSize(new Dimension(Integer.MAX_VALUE, wrapper.getPreferredSize().height)); 
-        chatPanel.add(wrapper);
+    } catch (Exception e) { 
+        JLabel errorLabel = new JLabel("[Display Error]"); 
+        errorLabel.setForeground(Color.RED); 
+        errorLabel.setOpaque(false); 
+        contentComponent = errorLabel; 
     }
+
+    bubble.add(contentComponent, BorderLayout.CENTER);
+    ZonedDateTime timestamp = msg.getTimestamp();
+    if (timestamp != null) { 
+        // Chuẩn hóa múi giờ
+        ZonedDateTime localTimestamp = timestamp.withZoneSameInstant(ZoneId.of("Asia/Ho_Chi_Minh"));
+        JLabel timeLabel = new JLabel(localTimestamp.format(DateTimeFormatter.ofPattern("HH:mm"))); 
+        timeLabel.setFont(new Font("Segoe UI", Font.PLAIN, 10)); 
+        timeLabel.setForeground(Color.DARK_GRAY); 
+        timeLabel.setHorizontalAlignment(alignRight ? 4 : 2); 
+        timeLabel.setBorder(BorderFactory.createEmptyBorder(2, 2, 0, 2)); 
+        timeLabel.setOpaque(false); 
+        bubble.add(timeLabel, BorderLayout.SOUTH); 
+    } else { 
+        bubble.add(Box.createVerticalStrut(12), BorderLayout.SOUTH); 
+    }
+    JPanel wrapper = new JPanel(new FlowLayout(alignRight ? 4 : 0, 0, 2)); 
+    wrapper.setBackground(Color.WHITE); 
+    wrapper.add(bubble); 
+    wrapper.setMaximumSize(new Dimension(Integer.MAX_VALUE, wrapper.getPreferredSize().height)); 
+    chatPanel.add(wrapper);
+}
     
     
     private JLabel createImageLabel(String url) {

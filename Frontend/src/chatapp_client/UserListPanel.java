@@ -166,7 +166,7 @@ public class UserListPanel extends JPanel {
             openChat.addActionListener(evt -> mainForm.showPrivateChatForm(selectedUser.getId(), selectedUser.getUsername()));
             menu.add(openChat);
 
-            JMenuItem addItem = new JMenuItem("➕ Gửi lời mời kết bạn");
+            JMenuItem addItem = new JMenuItem("Gửi lời mời kết bạn");
             addItem.setFont(new Font("Segoe UI", Font.PLAIN, 14));
             addItem.addActionListener(evt -> sendRequest(selectedUser));
             menu.add(addItem);
