@@ -1,2 +1,2 @@
 # LTM_Netbean
-Ứng dụng supperchat
+Ứng dụng superchat mã hóa E2EE
