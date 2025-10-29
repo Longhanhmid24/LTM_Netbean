@@ -79,10 +79,16 @@ public class GroupService {
      */
     public List<Group> getGroupsByUserId(int userId) {
         String sql = """
-            SELECT g.* FROM `groups` g
-            JOIN group_members gm ON g.id = gm.group_id
-            WHERE gm.member_id = ?
-            ORDER BY g.name ASC
+                SELECT 
+                    g.id AS id,
+                    g.name AS name,
+                    g.creator_id AS creatorId,
+                    g.avatar AS avatar,
+                    g.created_at AS createdAt
+                FROM `groups` g
+                JOIN group_members gm ON g.id = gm.group_id
+                WHERE gm.member_id = ?
+                ORDER BY g.name ASC
             """;
         
         return jdbc.query(sql, new BeanPropertyRowMapper<>(Group.class), userId);

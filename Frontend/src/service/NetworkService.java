@@ -54,7 +54,7 @@ import javax.crypto.SecretKey;
 public class NetworkService {
 
     // ... (Constants, Mappers, và các hàm helper JSON giữ nguyên) ...
-    private static final String SERVER_IP = "192.168.92.1";
+    private static final String SERVER_IP = "192.168.1.230";
     public static final String BASE_URL = "http://" + SERVER_IP + ":8080/api/";
     public static final String WS_URL = "ws://" + SERVER_IP + ":8080/ws/raw";
     private static final HttpClient httpClient = HttpClient.newBuilder().connectTimeout(java.time.Duration.ofSeconds(10)).build();

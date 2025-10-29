@@ -154,41 +154,55 @@ public class GroupListPanel extends JPanel {
         }
     }
     
-    /**
-     * ✅ HÀM MỚI: Hiển thị Popup Menu cho Nhóm (Thêm thành viên, Xóa nhóm)
-     */
-    private void showPopupMenu(MouseEvent e) {
-        JPopupMenu menu = new JPopupMenu();
-        Group selectedGroup = lstGroups.getSelectedValue();
-        if (selectedGroup == null) return;
+  /**
+ * ✅ Hiển thị menu chuột phải cho nhóm (Mở chat, Mời thành viên, Xóa nhóm nếu là creator)
+ */
+private void showPopupMenu(MouseEvent e) {
+    JPopupMenu menu = new JPopupMenu();
+    Group selectedGroup = lstGroups.getSelectedValue();
+    if (selectedGroup == null) return;
 
-        // 1. Nút Mở Trò chuyện
-        JMenuItem openChat = new JMenuItem("Mở Trò chuyện Nhóm");
-        openChat.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        openChat.addActionListener(evt -> mainForm.showGroupChatForm(selectedGroup.getId(), selectedGroup.getName()));
-        menu.add(openChat);
-        
+    int currentUserId = mainForm.getLoggedInUserId();
+    int creatorId = selectedGroup.getCreatorId();
+
+    // --- Debug để kiểm tra ---
+    System.out.println("[DEBUG] CreatorId = " + creatorId + ", CurrentUserId = " + currentUserId);
+
+    // 1️⃣ Nút mở trò chuyện nhóm
+    JMenuItem openChat = new JMenuItem("💬 Mở Trò chuyện Nhóm");
+    openChat.setFont(new Font("Segoe UI", Font.BOLD, 14));
+    openChat.addActionListener(evt ->
+        mainForm.showGroupChatForm(selectedGroup.getId(), selectedGroup.getName())
+    );
+    menu.add(openChat);
+
+    menu.addSeparator();
+
+    // 2️⃣ Nút mời thêm thành viên
+    JMenuItem addMemberItem = new JMenuItem("➕ Mời thành viên...");
+    addMemberItem.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+    addMemberItem.addActionListener(evt ->
+        showAddMemberDialog(selectedGroup)
+    );
+    menu.add(addMemberItem);
+
+    // 3️⃣ Nút xóa nhóm (chỉ hiện nếu user là creator)
+    if (creatorId == currentUserId) {
         menu.addSeparator();
-
-        // 2. Nút Thêm Thành viên
-        JMenuItem addItem = new JMenuItem("➕ Mời thành viên...");
-        addItem.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        addItem.addActionListener(evt -> showAddMemberDialog(selectedGroup));
-        menu.add(addItem);
-        
-        // 3. Nút Xóa Nhóm (Chỉ hiển thị nếu là creator)
-        if (selectedGroup.getCreatorId() == mainForm.getLoggedInUserId()) {
-            menu.addSeparator();
-            JMenuItem deleteItem = new JMenuItem("❌ Xóa Nhóm");
-            deleteItem.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-            deleteItem.setForeground(Color.RED);
-            deleteItem.addActionListener(evt -> deleteGroup(selectedGroup));
-            menu.add(deleteItem);
-        }
-
-        menu.show(e.getComponent(), e.getX(), e.getY());
+        JMenuItem deleteItem = new JMenuItem("❌ Xóa Nhóm");
+        deleteItem.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        deleteItem.setForeground(Color.RED);
+        deleteItem.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        deleteItem.addActionListener(evt -> deleteGroup(selectedGroup));
+        menu.add(deleteItem);
+    } else {
+        // Nếu không phải creator, in ra để debug
+        System.out.println("[DEBUG] Không hiển thị nút xóa — user không phải creator nhóm này.");
     }
 
+    // Hiển thị menu tại vị trí chuột
+    menu.show(e.getComponent(), e.getX(), e.getY());
+}
     /**
      * ✅ HÀM MỚI: Mở dialog mời bạn bè
      */
