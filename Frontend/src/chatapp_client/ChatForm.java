@@ -106,8 +106,8 @@ public class ChatForm extends JPanel {
     
     private TransferHandler createFileDropHandler() { 
         return new TransferHandler() { 
-            @Override public boolean canImport(TransferSupport support) { return support.isDataFlavorSupported(DataFlavor.javaFileListFlavor); } 
-            @Override public boolean importData(TransferSupport support) { 
+            @Override public boolean canImport(TransferHandler.TransferSupport support) { return support.isDataFlavorSupported(DataFlavor.javaFileListFlavor); } 
+            @Override public boolean importData(TransferHandler.TransferSupport support) { 
                 if (!canImport(support)) return false; 
                 Transferable t = support.getTransferable(); 
                 try { 

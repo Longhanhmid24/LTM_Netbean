@@ -169,7 +169,7 @@ private void showPopupMenu(MouseEvent e) {
     System.out.println("[DEBUG] CreatorId = " + creatorId + ", CurrentUserId = " + currentUserId);
 
     // 1️⃣ Nút mở trò chuyện nhóm
-    JMenuItem openChat = new JMenuItem("💬 Mở Trò chuyện Nhóm");
+    JMenuItem openChat = new JMenuItem("Mở Trò chuyện Nhóm");
     openChat.setFont(new Font("Segoe UI", Font.BOLD, 14));
     openChat.addActionListener(evt ->
         mainForm.showGroupChatForm(selectedGroup.getId(), selectedGroup.getName())
@@ -179,7 +179,7 @@ private void showPopupMenu(MouseEvent e) {
     menu.addSeparator();
 
     // 2️⃣ Nút mời thêm thành viên
-    JMenuItem addMemberItem = new JMenuItem("➕ Mời thành viên...");
+    JMenuItem addMemberItem = new JMenuItem("Mời thành viên...");
     addMemberItem.setFont(new Font("Segoe UI", Font.PLAIN, 14));
     addMemberItem.addActionListener(evt ->
         showAddMemberDialog(selectedGroup)
@@ -189,7 +189,7 @@ private void showPopupMenu(MouseEvent e) {
     // 3️⃣ Nút xóa nhóm (chỉ hiện nếu user là creator)
     if (creatorId == currentUserId) {
         menu.addSeparator();
-        JMenuItem deleteItem = new JMenuItem("❌ Xóa Nhóm");
+        JMenuItem deleteItem = new JMenuItem("Xóa Nhóm");
         deleteItem.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         deleteItem.setForeground(Color.RED);
         deleteItem.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));

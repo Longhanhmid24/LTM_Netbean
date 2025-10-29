@@ -1,58 +1,28 @@
 package chatapp_client;
 
 import service.NetworkService;
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Desktop;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.Font;
-import java.awt.event.ActionListener; // Import
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
+import java.awt.*;
+import java.awt.event.*;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.concurrent.TimeUnit;
-import javax.swing.JButton;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JSlider;
-import javax.swing.SwingConstants;
-import javax.swing.SwingUtilities;
-import javax.swing.BorderFactory;
-import java.util.Optional;
-import java.util.List;
-import javax.swing.JFileChooser; // Import
-import java.nio.file.Files; // Import
-import java.nio.file.Path; // Import
-import java.nio.file.StandardOpenOption; // Import
-
-// ✅ THÊM CÁC IMPORT THIẾU BẮT BUỘC
+import javax.swing.*;
+import uk.co.caprica.vlcj.factory.discovery.NativeDiscovery;
+import uk.co.caprica.vlcj.player.base.MediaPlayer;
+import uk.co.caprica.vlcj.player.base.MediaPlayerEventAdapter;
+import uk.co.caprica.vlcj.player.component.EmbeddedMediaPlayerComponent;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.util.concurrent.CompletionException;
-
-// Imports VLCj
-import uk.co.caprica.vlcj.factory.discovery.NativeDiscovery;
-import uk.co.caprica.vlcj.player.base.MediaPlayer;
-import uk.co.caprica.vlcj.player.base.MediaPlayerEventAdapter;
-import uk.co.caprica.vlcj.player.component.EmbeddedMediaPlayerComponent;
-
 
 public class MediaPlayerFrame extends JFrame {
 
     private EmbeddedMediaPlayerComponent mediaPlayerComponent;
-
     private final String mediaUrl;
     private final String mediaTitle;
     private final boolean isAudioOnly;
@@ -63,13 +33,13 @@ public class MediaPlayerFrame extends JFrame {
     // Các nút Swing Tùy chỉnh
     private JButton btnPlayPause;
     private JButton btnStop;
+    private JButton btnRewind; // << Tua lại
+    private JButton btnForward; // >> Tua nhanh
     private JSlider timeSlider;
+    private JSlider volumeSlider; // Thanh âm lượng
     private JLabel lblTime;
-    private JLabel audioOnlyBanner; // Banner
-
-    // ✅ Nút Download
+    private JLabel audioOnlyBanner;
     private JButton btnDownload;
-
 
     /**
      * Kiểm tra cài đặt VLC.
@@ -83,7 +53,8 @@ public class MediaPlayerFrame extends JFrame {
             if (vlcFound) System.out.println("OK: Đã tìm thấy thư viện VLC.");
             else System.err.println("LỖI: Không tìm thấy thư viện VLC Player!");
         } catch (Exception e) {
-            System.err.println("Lỗi khi kiểm tra VLC: " + e.getMessage()); vlcFound = false;
+            System.err.println("Lỗi khi kiểm tra VLC: " + e.getMessage());
+            vlcFound = false;
         }
         isCheckingVlc = false;
         return vlcFound;
@@ -97,21 +68,28 @@ public class MediaPlayerFrame extends JFrame {
         this.mediaTitle = (title != null ? title : "Media");
         this.isAudioOnly = isAudio;
 
-        setTitle("Đang tải: " + mediaTitle);
+        setTitle("Đang kiểm tra VLC...");
         setSize(800, 600);
+        setMinimumSize(new Dimension(400, 300));
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
-        JPanel contentPane = new JPanel(new BorderLayout());
-        contentPane.setBackground(Color.BLACK);
+        // Hiển thị loading panel trong khi kiểm tra VLC
+        JLabel loadingLabel = new JLabel("Đang kiểm tra VLC...", SwingConstants.CENTER);
+        loadingLabel.setForeground(Color.WHITE);
+        loadingLabel.setFont(new Font("Segoe UI", Font.BOLD, 18));
+        loadingLabel.setBackground(Color.BLACK);
+        loadingLabel.setOpaque(true);
+        setContentPane(loadingLabel);
 
+        // Kiểm tra VLC
         if (!checkVlcInstallation()) {
-            openFileExternal(mediaUrl, mediaTitle);
+            openFileExternal(mediaUrl, mediaTitle, "Không tìm thấy VLC. Đã mở trình duyệt.");
             mediaPlayerComponent = null;
             return;
         }
 
-        // 2. Khởi tạo Component Cốt lõi
+        // Khởi tạo Component Cốt lõi
         try {
             mediaPlayerComponent = new EmbeddedMediaPlayerComponent();
 
@@ -122,30 +100,29 @@ public class MediaPlayerFrame extends JFrame {
             audioOnlyBanner.setBackground(new Color(0, 0, 0, 180));
             audioOnlyBanner.setOpaque(true);
             audioOnlyBanner.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-
         } catch (Exception | Error e) {
             System.err.println("Lỗi nghiêm trọng khi khởi tạo EmbeddedMediaPlayerComponent: " + e.getMessage());
             e.printStackTrace();
-            openFileExternal(mediaUrl, mediaTitle); // Fallback khi khởi tạo lỗi
+            openFileExternal(mediaUrl, mediaTitle, "Không thể khởi tạo trình phát. Đã mở trình duyệt.");
             mediaPlayerComponent = null;
             return;
         }
 
-        // 3. Setup Controls và Listeners
-        JPanel controlsPanel = createCustomControls();
+        // Setup Controls và Layout
+        JPanel contentPane = new JPanel(new BorderLayout());
+        contentPane.setBackground(Color.BLACK);
 
-        // --- CẤU TRÚC LAYOUT VÀ ẨN/HIỆN ---
+        JPanel controlsPanel = createCustomControls();
         JPanel mediaPanel = new JPanel(new BorderLayout());
         mediaPanel.setBackground(Color.BLACK);
         mediaPanel.setOpaque(true);
         mediaPanel.add(mediaPlayerComponent, BorderLayout.CENTER);
 
-        // Nếu là Audio Only, ẩn Player và hiển thị Banner thay thế
         if (isAudioOnly) {
-            mediaPlayerComponent.setVisible(false); // Ẩn bề mặt video
-            mediaPanel.add(audioOnlyBanner, BorderLayout.CENTER); // Đặt banner vào giữa
+            mediaPlayerComponent.setVisible(false);
+            mediaPanel.add(audioOnlyBanner, BorderLayout.CENTER);
         } else {
-            audioOnlyBanner.setVisible(false); // Đảm bảo ẩn banner nếu là video
+            audioOnlyBanner.setVisible(false);
         }
 
         contentPane.add(mediaPanel, BorderLayout.CENTER);
@@ -153,8 +130,13 @@ public class MediaPlayerFrame extends JFrame {
 
         setContentPane(contentPane);
 
-        // 4. Thêm WindowListener
+        // Thêm WindowListener để phát media khi cửa sổ mở
         addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowOpened(WindowEvent e) {
+                playMedia();
+            }
+
             @Override
             public void windowClosing(WindowEvent e) {
                 if (mediaPlayerComponent != null) {
@@ -168,7 +150,6 @@ public class MediaPlayerFrame extends JFrame {
             }
         });
 
-        // GỌI HÀM SETUP LISTENER SAU CÙNG
         setupControlListeners();
         setupMediaListeners();
     }
@@ -180,21 +161,25 @@ public class MediaPlayerFrame extends JFrame {
         JPanel panel = new JPanel(new BorderLayout(5, 5));
         panel.setBackground(new Color(40, 40, 40));
 
-        // 1. Khởi tạo các Control
-        btnPlayPause = new JButton("Play"); // ▶ Play
-        btnStop = new JButton("Stop"); // ■ Stop
+        // Khởi tạo các Control
+        btnPlayPause = new JButton("Play");
+        btnStop = new JButton("Stop");
+        btnRewind = new JButton("<<"); // Tua lại 5s
+        btnForward = new JButton(">>"); // Tua nhanh 5s
         lblTime = new JLabel("00:00 / 00:00");
         timeSlider = new JSlider(0, 1000, 0);
-        // Khởi tạo nút Download
+        volumeSlider = new JSlider(0, 100, 50); // Âm lượng từ 0-100, mặc định 50
         btnDownload = new JButton("Tải về");
+
+        // Cấu hình Control
+        btnPlayPause.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        btnStop.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        btnRewind.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        btnForward.setFont(new Font("Segoe UI", Font.BOLD, 14));
         btnDownload.setFont(new Font("Segoe UI", Font.BOLD, 14));
         btnDownload.setBackground(new Color(100, 149, 237));
         btnDownload.setForeground(Color.WHITE);
         btnDownload.setFocusPainted(false);
-
-        // 2. Cấu hình Control
-        btnPlayPause.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        btnStop.setFont(new Font("Segoe UI", Font.BOLD, 14));
 
         lblTime.setFont(new Font("Consolas", Font.BOLD, 14));
         lblTime.setForeground(Color.WHITE);
@@ -206,37 +191,48 @@ public class MediaPlayerFrame extends JFrame {
         timeSlider.setForeground(Color.LIGHT_GRAY);
         timeSlider.setToolTipText("Thanh tua");
 
-        // 3. Sắp xếp Layout
+        volumeSlider.setOpaque(false);
+        volumeSlider.setForeground(Color.LIGHT_GRAY);
+        volumeSlider.setToolTipText("Điều chỉnh âm lượng");
+        volumeSlider.setPreferredSize(new Dimension(100, 25));
+
+        // Sắp xếp Layout
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 5));
         buttonPanel.setOpaque(false);
+        buttonPanel.add(btnRewind);
         buttonPanel.add(btnPlayPause);
         buttonPanel.add(btnStop);
+        buttonPanel.add(btnForward);
 
-        // Panel Download (phía Đông)
         JPanel downloadPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 5));
         downloadPanel.setOpaque(false);
+        // ✅ SỬA: Đặt màu chữ trắng cho JLabel "Âm lượng:"
+        JLabel volumeLabel = new JLabel("Volume:");
+        volumeLabel.setForeground(Color.WHITE);
+        downloadPanel.add(volumeLabel);
+        downloadPanel.add(volumeSlider);
         downloadPanel.add(btnDownload);
 
         JPanel timeControlPanel = new JPanel(new BorderLayout(10, 0));
         timeControlPanel.setOpaque(false);
-        timeControlPanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 15)); // Padding phải
-
+        timeControlPanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 15));
         timeControlPanel.add(lblTime, BorderLayout.WEST);
         timeControlPanel.add(timeSlider, BorderLayout.CENTER);
 
         panel.add(buttonPanel, BorderLayout.WEST);
         panel.add(timeControlPanel, BorderLayout.CENTER);
-        panel.add(downloadPanel, BorderLayout.EAST); // Thêm nút download vào EAST
+        panel.add(downloadPanel, BorderLayout.EAST);
 
         return panel;
     }
 
-
     /**
-     * Thiết lập các sự kiện cho nút và slider (chỉ logic Swing).
+     * Thiết lập các sự kiện cho nút và slider.
      */
     private void setupControlListeners() {
-        // --- Sự kiện Nút Play/Pause ---
+        if (mediaPlayerComponent == null) return;
+
+        // Sự kiện Play/Pause
         ActionListener playPauseAction = e -> {
             if (mediaPlayerComponent.mediaPlayer().status().isPlaying()) {
                 mediaPlayerComponent.mediaPlayer().controls().pause();
@@ -245,52 +241,61 @@ public class MediaPlayerFrame extends JFrame {
             }
         };
 
-        btnPlayPause.addActionListener(playPauseAction); // Gắn action vào nút
-
-        // Gắn action vào bề mặt media component (Mouse Click)
+        btnPlayPause.addActionListener(playPauseAction);
         mediaPlayerComponent.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
                 if (e.getClickCount() == 1) {
-                    playPauseAction.actionPerformed(null); // Kích hoạt action Play/Pause
+                    playPauseAction.actionPerformed(null);
                 }
             }
         });
 
+        // Sự kiện Stop
         btnStop.addActionListener(e -> {
             mediaPlayerComponent.mediaPlayer().controls().stop();
-            btnPlayPause.setText("Play"); // ▶ Play
+            btnPlayPause.setText("Play");
             timeSlider.setValue(0);
-            lblTime.setText(formatTime(0) + " / " + formatTime(mediaPlayerComponent.mediaPlayer().status().length()));
+            lblTime.setText("00:00 / " + formatTime(mediaPlayerComponent.mediaPlayer().status().length()));
         });
 
-        // --- Sự kiện Thanh trượt ---
+        // Sự kiện Tua lại 5s
+        btnRewind.addActionListener(e -> {
+            mediaPlayerComponent.mediaPlayer().controls().skipTime(-5000); // Tua lại 5 giây
+        });
+
+        // Sự kiện Tua nhanh 5s
+        btnForward.addActionListener(e -> {
+            mediaPlayerComponent.mediaPlayer().controls().skipTime(5000); // Tua nhanh 5 giây
+        });
+
+        // Sự kiện Thanh trượt thời gian
         timeSlider.addMouseListener(new MouseAdapter() {
-            @Override public void mousePressed(MouseEvent e) {}
             @Override
             public void mouseReleased(MouseEvent e) {
                 mediaPlayerComponent.mediaPlayer().controls().setPosition((float) timeSlider.getValue() / 1000f);
             }
         });
 
-        // ✅ LOGIC NÚT DOWNLOAD
-        btnDownload.addActionListener(e -> {
-            downloadMediaFile(mediaUrl, mediaTitle);
+        // Sự kiện Thanh trượt âm lượng
+        volumeSlider.addChangeListener(e -> {
+            mediaPlayerComponent.mediaPlayer().audio().setVolume(volumeSlider.getValue());
         });
+
+        // Sự kiện Download
+        btnDownload.addActionListener(e -> downloadMediaFile(mediaUrl, mediaTitle));
     }
 
-
     /**
-     * Thiết lập adapter nghe sự kiện media (logic VLCj).
+     * Thiết lập adapter nghe sự kiện media.
      */
     private void setupMediaListeners() {
+        if (mediaPlayerComponent == null) return;
         mediaPlayerComponent.mediaPlayer().events().addMediaPlayerEventListener(new MediaPlayerEventAdapter() {
-
             @Override
             public void mediaChanged(MediaPlayer mp, uk.co.caprica.vlcj.media.MediaRef mr) {
                 SwingUtilities.invokeLater(() -> {
-                    // Banner đã được setVisible(isAudioOnly) trong constructor
-                    // Không cần logic phức tạp ở đây
+                    // Không cần logic phức tạp
                 });
             }
 
@@ -309,44 +314,50 @@ public class MediaPlayerFrame extends JFrame {
             public void lengthChanged(MediaPlayer mp, long newLength) {
                 SwingUtilities.invokeLater(() -> {
                     timeSlider.setValue(0);
-                    lblTime.setText(formatTime(0) + " / " + formatTime(newLength));
+                    lblTime.setText("00:00 / " + formatTime(newLength));
                 });
             }
 
             @Override
             public void finished(MediaPlayer mp) {
                 SwingUtilities.invokeLater(() -> {
-                    btnPlayPause.setText("Play"); // ▶ Play
+                    btnPlayPause.setText("Play");
                     timeSlider.setValue(1000);
                 });
             }
 
             @Override
             public void playing(MediaPlayer mp) {
-                SwingUtilities.invokeLater(() -> btnPlayPause.setText("Pause")); // ⏸ Pause
+                SwingUtilities.invokeLater(() -> btnPlayPause.setText("Pause"));
             }
 
             @Override
             public void paused(MediaPlayer mp) {
-                SwingUtilities.invokeLater(() -> btnPlayPause.setText("Play")); // ▶ Play
+                SwingUtilities.invokeLater(() -> btnPlayPause.setText("Play"));
             }
 
             @Override
             public void stopped(MediaPlayer mp) {
-                SwingUtilities.invokeLater(() -> btnPlayPause.setText("Play")); // ▶ Play
+                SwingUtilities.invokeLater(() -> btnPlayPause.setText("Play"));
+            }
+
+            @Override
+            public void error(MediaPlayer mp) {
+                SwingUtilities.invokeLater(() -> {
+                    System.err.println("VLCj: Lỗi phát media!");
+                    openFileExternal(mediaUrl, mediaTitle, "Không thể phát file media: Lỗi codec hoặc file không hợp lệ.");
+                });
             }
         });
     }
 
     /**
-     * Chuyển đổi mili giây thành chuỗi thời gian (mm:ss nếu < 1 giờ, HH:mm:ss nếu >= 1 giờ).
+     * Chuyển đổi mili giây thành chuỗi thời gian.
      */
     private String formatTime(long ms) {
         if (ms <= 0) return "00:00";
-
         long totalSeconds = TimeUnit.MILLISECONDS.toSeconds(ms);
-
-        if (totalSeconds < 3600) { // Nếu dưới 1 giờ (3600 giây)
+        if (totalSeconds < 3600) {
             long seconds = totalSeconds % 60;
             long minutes = totalSeconds / 60;
             return String.format("%02d:%02d", minutes, seconds);
@@ -359,76 +370,60 @@ public class MediaPlayerFrame extends JFrame {
     }
 
     /**
-     * Ghi đè setVisible để bắt đầu phát khi frame hiển thị
-     */
-    @Override
-    public void setVisible(boolean visible) {
-        if (mediaPlayerComponent == null) {
-            super.setVisible(false);
-            return;
-        }
-
-        super.setVisible(visible);
-
-        if (visible) {
-            playMedia();
-        }
-    }
-
-    /**
      * Bắt đầu phát media.
      */
     private void playMedia() {
-        if (mediaPlayerComponent == null) { return; }
+        if (mediaPlayerComponent == null) {
+            openFileExternal(mediaUrl, mediaTitle, "Không thể khởi tạo trình phát media.");
+            return;
+        }
 
-        // Gọi NetworkService để mã hóa URL
-        String encodedUrl = service.NetworkService.encodeUrlPath(mediaUrl);
-
+        String encodedUrl = NetworkService.encodeUrlPath(mediaUrl);
         if (encodedUrl != null) {
             System.out.println("VLCj: Đang thử phát: " + encodedUrl);
             setTitle("Đang phát: " + mediaTitle);
-
-            boolean success = mediaPlayerComponent.mediaPlayer().media().play(encodedUrl);
-
-            if (!success) {
-                System.err.println("VLCj: Lệnh play() trả về false (Không tìm thấy file hoặc lỗi codec).");
-                JOptionPane.showMessageDialog(this, "Không thể bắt đầu phát file media này.", "Lỗi Phát", JOptionPane.ERROR_MESSAGE);
-                dispose(); // Đóng cửa sổ nếu không phát được
-            } else {
-                btnPlayPause.setText("⏸ Pause");
+            try {
+                boolean success = mediaPlayerComponent.mediaPlayer().media().play(encodedUrl);
+                if (!success) {
+                    System.err.println("VLCj: Lệnh play() trả về false (Không tìm thấy file hoặc lỗi codec).");
+                    openFileExternal(mediaUrl, mediaTitle, "Không thể phát file media: Lỗi codec hoặc file không hợp lệ.");
+                } else {
+                    btnPlayPause.setText("Pause");
+                    mediaPlayerComponent.mediaPlayer().audio().setVolume(volumeSlider.getValue());
+                }
+            } catch (Exception e) {
+                System.err.println("VLCj: Lỗi khi gọi play(): " + e.getMessage());
+                openFileExternal(mediaUrl, mediaTitle, "Không thể phát file media: " + e.getMessage());
             }
         } else {
             System.err.println("VLCj: URL không hợp lệ, không thể phát: " + mediaUrl);
-            JOptionPane.showMessageDialog(this, "URL media không hợp lệ.", "Lỗi Phát", JOptionPane.ERROR_MESSAGE);
-            dispose();
+            openFileExternal(mediaUrl, mediaTitle, "URL media không hợp lệ.");
         }
     }
 
     /**
-     * Hàm mở ứng dụng ngoài (cần thiết cho Fallback)
+     * Hàm mở ứng dụng ngoài (cần thiết cho Fallback).
      */
-    private void openFileExternal(String url, String title) {
-        String encodedUrl = service.NetworkService.encodeUrlPath(url);
+    private void openFileExternal(String url, String title, String errorMessage) {
+        String encodedUrl = NetworkService.encodeUrlPath(url);
         if (encodedUrl != null) {
             try {
                 System.out.println("Mở trình phát ngoài cho: " + encodedUrl);
                 Desktop.getDesktop().browse(new URI(encodedUrl));
-                JOptionPane.showMessageDialog(null, "Đã mở trình phát media mặc định cho file:\n" + title, "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+                JOptionPane.showMessageDialog(null, errorMessage + "\nĐã mở trình phát media mặc định.", "Thông báo", JOptionPane.WARNING_MESSAGE);
             } catch (IOException | URISyntaxException ex) {
                 System.err.println("Lỗi khi mở trình phát ngoài: " + ex.getMessage());
                 JOptionPane.showMessageDialog(null, "Không thể mở file media bên ngoài.", "Lỗi Phát", JOptionPane.ERROR_MESSAGE);
             }
         }
-        // Gọi dispose frame trống
         SwingUtilities.invokeLater(this::dispose);
     }
 
     /**
-     * ✅ TẠO HÀM MỚI: Xử lý logic tải file media về máy cục bộ.
+     * Xử lý logic tải file media về máy cục bộ.
      */
     private void downloadMediaFile(String url, String fileName) {
-        // Cần lấy NetworkService.encodeUrlPath()
-        String encodedUrl = service.NetworkService.encodeUrlPath(url);
+        String encodedUrl = NetworkService.encodeUrlPath(url);
         if (encodedUrl == null) {
             JOptionPane.showMessageDialog(this, "URL không hợp lệ, không thể tải.", "Lỗi Tải", JOptionPane.ERROR_MESSAGE);
             return;
@@ -436,42 +431,36 @@ public class MediaPlayerFrame extends JFrame {
 
         JFileChooser saveChooser = new JFileChooser();
         saveChooser.setDialogTitle("Lưu Tệp Media");
-        // Đặt tên file gợi ý (loại bỏ tiền tố timestamp nếu có)
-        String suggestedName = fileName;
-        if (suggestedName.matches("^\\d{14,}_.*")) {
-            suggestedName = suggestedName.substring(suggestedName.indexOf('_') + 1);
-           }
+        String suggestedName = fileName.matches("^\\d{14,}_.*") ? fileName.substring(fileName.indexOf('_') + 1) : fileName;
         saveChooser.setSelectedFile(new File(suggestedName));
 
-        int userSelection = saveChooser.showSaveDialog(this);
-        if (userSelection == JFileChooser.APPROVE_OPTION) {
+        if (saveChooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
             File fileToSave = saveChooser.getSelectedFile();
+            btnDownload.setEnabled(false);
+            btnDownload.setText("Đang tải...");
 
-            // Chạy việc tải file trên luồng riêng để không treo giao diện
             new Thread(() -> {
                 try {
-                    // Dùng HttpClient để tải file
                     HttpClient client = HttpClient.newHttpClient();
-                    HttpRequest request = HttpRequest.newBuilder()
-                            .uri(URI.create(encodedUrl))
-                            .GET()
-                            .build();
-
-                    // Tải file trực tiếp vào đường dẫn đã chọn
-                    HttpResponse<Path> response = client.send(request, java.net.http.HttpResponse.BodyHandlers.ofFile(fileToSave.toPath(), StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING));
-
+                    HttpRequest request = HttpRequest.newBuilder().uri(URI.create(encodedUrl)).GET().build();
+                    HttpResponse<Path> response = client.send(request, HttpResponse.BodyHandlers.ofFile(fileToSave.toPath(), StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING));
                     SwingUtilities.invokeLater(() -> {
                         if (response.statusCode() == 200) {
                             JOptionPane.showMessageDialog(this, "Tải về thành công!\nLưu tại: " + fileToSave.getAbsolutePath(), "Tải Xong", JOptionPane.INFORMATION_MESSAGE);
                         } else {
-                            // Xóa file lỗi (nếu có)
-                            try { Files.deleteIfExists(fileToSave.toPath()); } catch(IOException ex) {}
+                            try {
+                                Files.deleteIfExists(fileToSave.toPath());
+                            } catch (IOException ex) {}
                             JOptionPane.showMessageDialog(this, "Tải về thất bại. (HTTP Status: " + response.statusCode() + ")", "Lỗi Mạng", JOptionPane.ERROR_MESSAGE);
                         }
+                        btnDownload.setEnabled(true);
+                        btnDownload.setText("Tải về");
                     });
                 } catch (Exception ex) {
                     SwingUtilities.invokeLater(() -> {
                         JOptionPane.showMessageDialog(this, "Lỗi khi tải file: " + ex.getMessage(), "Lỗi I/O", JOptionPane.ERROR_MESSAGE);
+                        btnDownload.setEnabled(true);
+                        btnDownload.setText("Tải về");
                     });
                 }
             }).start();
