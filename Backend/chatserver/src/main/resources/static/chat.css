@@ -1,0 +1,133 @@
+body { 
+  font-family: Arial, sans-serif; 
+  background: #f9f9f9; 
+  padding: 20px;
+}
+
+h2 {
+  color: #333;
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+h2::before {
+  content: "💬";
+  margin-right: 10px;
+}
+
+#chat-box {
+  height: 380px;
+  border: 1px solid #ddd;
+  background: #fff;
+  overflow-y: auto;
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.msg-wrapper {
+  display: flex;
+  margin-bottom: 10px;
+  clear: both;
+}
+
+.msg {
+  padding: 10px 14px;
+  border-radius: 15px;
+  max-width: 70%;
+  word-wrap: break-word;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+.me-wrapper { justify-content: flex-end; }
+.me {
+  background: #007bff;
+  color: #fff;
+  border-bottom-right-radius: 2px;
+}
+
+.other-wrapper { justify-content: flex-start; }
+.other {
+  background: #f1f0f0;
+  color: #000;
+  border-bottom-left-radius: 2px;
+}
+
+#controls {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 10px;
+}
+
+input[type="text"] {
+  flex: 1;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+input[type="file"] { display: none; }
+
+label {
+  background: #17a2b8;
+  color: white;
+  padding: 9px 15px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+button {
+  background: #007bff;
+  color: white;
+  padding: 9px 15px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+}
+
+button:hover, label:hover {
+  opacity: 0.9;
+}
+
+#progress-container {
+  width: 100%;
+  background: #e9ecef;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-top: 10px;
+  display: none;
+  height: 12px;
+}
+
+#progress-bar {
+  height: 12px;
+  width: 0%;
+  background: #007bff;
+  transition: width 0.3s;
+}
+
+#progress-text {
+  text-align: right;
+  font-size: 13px;
+  color: #333;
+  margin-top: 3px;
+}
+
+/* Video Call UI */
+#call-controls {
+  margin-top: 20px;
+  display: flex;
+  gap: 10px;
+}
+#video-container {
+  display: none;
+  justify-content: space-around;
+  margin-top: 15px;
+}
+video {
+  width: 45%;
+  border-radius: 10px;
+  background: #000;
+}

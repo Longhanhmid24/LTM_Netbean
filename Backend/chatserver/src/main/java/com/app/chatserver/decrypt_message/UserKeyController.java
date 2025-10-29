@@ -25,7 +25,7 @@ public class UserKeyController {
             ON DUPLICATE KEY UPDATE public_key = VALUES(public_key), updated_at = NOW()
         """;
         jdbcTemplate.update(sql, userId, publicKey);
-        System.out.println("[UserKeyController] 🔑 Saved key for user " + userId);
+        System.out.println("[UserKeyController]  Saved key for user " + userId);
     }
 
     // ✅ Lấy public key của người khác
