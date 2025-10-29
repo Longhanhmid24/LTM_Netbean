@@ -18,9 +18,24 @@ public class User {
     private String sdt;
 
     @Column(nullable = false)
-    private String password;
+    private String password; // Đã hash (Bcrypt)
 
     private String avatar;
+
+    // --- CỘT MỚI CHO E2EE (LỚP 2) ---
+    @Column(name = "public_key", nullable = false, columnDefinition = "TEXT")
+    private String publicKey; // Lưu dạng Base64 text
+
+    @Lob
+    @Column(name = "enc_private_key", nullable = false, columnDefinition = "BLOB")
+    private byte[] encPrivateKey; // Lưu dạng byte array (BLOB)
+
+    @Column(nullable = false)
+    private String salt; // Lưu dạng Base64 text
+
+    @Column(nullable = false)
+    private String iv; // Lưu dạng Base64 text
+    // --- KẾT THÚC CỘT MỚI ---
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -46,14 +61,7 @@ public class User {
 
     public User() {}
 
-    public User(String username, String sdt, String password, String avatar) {
-        this.username = username;
-        this.sdt = sdt;
-        this.password = password;
-        this.avatar = avatar;
-    }
-
-    // Getters/Setters
+    // Getters và Setters (Lombok @Data không hoạt động tốt với @Lob byte[])
     public Integer getId() { return id; }
     public void setId(Integer id) { this.id = id; }
 
@@ -68,6 +76,18 @@ public class User {
 
     public String getAvatar() { return avatar; }
     public void setAvatar(String avatar) { this.avatar = avatar; }
+
+    public String getPublicKey() { return publicKey; }
+    public void setPublicKey(String publicKey) { this.publicKey = publicKey; }
+
+    public byte[] getEncPrivateKey() { return encPrivateKey; }
+    public void setEncPrivateKey(byte[] encPrivateKey) { this.encPrivateKey = encPrivateKey; }
+
+    public String getSalt() { return salt; }
+    public void setSalt(String salt) { this.salt = salt; }
+
+    public String getIv() { return iv; }
+    public void setIv(String iv) { this.iv = iv; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project-private xmlns="http://www.netbeans.org/ns/project-private/1">
+    <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
+    <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
+        <group>
+            <file>file:/D:/DA_LTM/ChatApp%20-%20Copy/src/chatapp_client/ChatApp.java</file>
+            <file>file:/D:/DA_LTM/ChatApp%20-%20Copy/src/chatapp_client/MainForm.java</file>
+            <file>file:/D:/DA_LTM/ChatApp%20-%20Copy/src/chatapp_client/LoginForm.java</file>
+            <file>file:/D:/DA_LTM/ChatApp%20-%20Copy/src/chatapp_client/RegisterForm.java</file>
+            <file>file:/D:/DA_LTM/ChatApp%20-%20Copy/src/chatapp_client/UserListPanel.java</file>
+            <file>file:/D:/DA_LTM/ChatApp%20-%20Copy/src/chatapp_client/ChatForm.java</file>
+            <file>file:/D:/DA_LTM/ChatApp%20-%20Copy/src/chatapp_client/MainChatPanel.java</file>
+            <file>file:/D:/DA_LTM/ChatApp%20-%20Copy/src/chatapp_client/WelcomePanel.java</file>
+            <file>file:/D:/DA_LTM/ChatApp%20-%20Copy/src/chatapp_client/RoundedBubblePanel.java</file>
+            <file>file:/D:/DA_LTM/ChatApp%20-%20Copy/src/chatapp_client/UserListRenderer.java</file>
+            <file>file:/D:/DA_LTM/ChatApp%20-%20Copy/src/chatapp_client/VideoCallFrame.java</file>
+            <file>file:/D:/DA_LTM/ChatApp%20-%20Copy/src/model/ChatMessage.java</file>
+            <file>file:/D:/DA_LTM/ChatApp%20-%20Copy/src/model/User.java</file>
+            <file>file:/D:/DA_LTM/ChatApp%20-%20Copy/src/service/NetworkService.java</file>
+            <file>file:/D:/DA_LTM/ChatApp%20-%20Copy/src/util/LenientZonedDateTimeDeserializer.java</file>
+            <file>file:/D:/DA_LTM/ChatApp%20-%20Copy/src/chatapp_client/MediaPlayerFrame.java</file>
+            <file>file:/D:/DA_LTM/ChatApp%20-%20Copy/src/service/CryptoService.java</file>
+            <file>file:/D:/DA_LTM/ChatApp%20-%20Copy/src/service/KeyService.java</file>
+            <file>file:/D:/DA_LTM/ChatApp%20-%20Copy/src/model/Group.java</file>
+            <file>file:/D:/DA_LTM/ChatApp%20-%20Copy/src/model/GroupMember.java</file>
+            <file>file:/D:/DA_LTM/ChatApp%20-%20Copy/src/model/GroupMessage.java</file>
+            <file>file:/D:/DA_LTM/ChatApp%20-%20Copy/src/chatapp_client/GroupListPanel.java</file>
+            <file>file:/D:/DA_LTM/ChatApp%20-%20Copy/src/chatapp_client/GroupChatForm.java</file>
+            <file>file:/D:/DA_LTM/ChatApp%20-%20Copy/src/chatapp_client/GroupListRenderer.java</file>
+            <file>file:/D:/DA_LTM/ChatApp%20-%20Copy/src/chatapp_client/CreateGroupDialog.java</file>
+        </group>
+    </open-files>
+</project-private>

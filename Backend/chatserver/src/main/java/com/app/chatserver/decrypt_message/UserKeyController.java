@@ -15,23 +15,36 @@ public class UserKeyController {
         this.jdbcTemplate = jdbcTemplate;
     }
 
-    // ✅ Lưu public key của user
+    /**
+     * ✅ SỬA LỖI: Cập nhật public_key trong bảng USERS
+     */
     @PostMapping("/{userId}")
     public void savePublicKey(@PathVariable int userId, @RequestBody Map<String, String> body) {
         String publicKey = body.get("publicKey");
+        
+        // Sửa SQL: UPDATE bảng 'users'
         String sql = """
-            INSERT INTO user_keys (user_id, public_key)
-            VALUES (?, ?)
-            ON DUPLICATE KEY UPDATE public_key = VALUES(public_key), updated_at = NOW()
+            UPDATE users 
+            SET public_key = ?, updated_at = NOW()
+            WHERE id = ?
         """;
-        jdbcTemplate.update(sql, userId, publicKey);
-        System.out.println("[UserKeyController] 🔑 Saved key for user " + userId);
+        
+        jdbcTemplate.update(sql, publicKey, userId);
+        System.out.println("[UserKeyController] 🔑 Updated public_key in USERS table for user " + userId);
     }
 
-    // ✅ Lấy public key của người khác
+    /**
+     * ✅ SỬA LỖI: Lấy public_key từ bảng USERS
+     */
     @GetMapping("/{userId}")
     public Map<String, Object> getPublicKey(@PathVariable int userId) {
-        String sql = "SELECT public_key FROM user_keys WHERE user_id = ?";
-        return jdbcTemplate.queryForMap(sql, userId);
+        // Sửa SQL: SELECT từ bảng 'users'
+        String sql = "SELECT public_key FROM users WHERE id = ?";
+        try {
+            return jdbcTemplate.queryForMap(sql, userId);
+        } catch (Exception e) {
+             System.err.println("[UserKeyController] Không tìm thấy key cho user " + userId + ". Lỗi: " + e.getMessage());
+             return Map.of("error", "Không tìm thấy key");
+        }
     }
 }

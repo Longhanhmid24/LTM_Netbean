@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="ChatApp" default="default" basedir=".">
+    <description>Builds, tests, and runs the project ChatApp.</description>
+    <import file="nbproject/build-impl.xml"/>
+    
+    <!-- Custom properties -->
+    <property name="lib.dir" value="lib"/>
+    
+    <!-- Pre-compile: Add lib to classpath -->
+    <target name="-pre-compile">
+        <path id="classpath">
+            <fileset dir="${lib.dir}" includes="*.jar"/>
+        </path>
+        <javac classpathref="classpath" srcdir="${src.dir}" destdir="${build.classes.dir}" includeantruntime="false"/>
+    </target>
+    
+    <!-- Run target with lib classpath -->
+    <target name="run" depends="default-jar">
+        <java fork="true" classname="chatapp_client.ChatApp" classpath="${build.classes.dir}:${lib.dir}/*.jar"/>
+    </target>
+    
+    <!-- Clean target (optional) -->
+    <target name="clean" depends="-clean-check">
+        <delete dir="build"/>
+        <delete dir="dist"/>
+    </target>
+</project>

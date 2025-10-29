@@ -1,0 +1,137 @@
+-- *******************************************************************
+-- SCHEMA CƠ SỞ DỮ LIỆU V2 - HỖ TRỢ E2EE NÂNG CAO (LỚP 2)
+-- *******************************************************************
+
+SET NAMES utf8mb4;
+SET CHARACTER SET utf8mb4;
+
+-- 1. BẢNG USERS (NGƯỜI DÙNG)
+-- ✅ ĐÃ THÊM: public_key (RSA)
+-- ✅ ĐÃ THÊM: enc_private_key (RSA Private Key đã được mã hóa bằng mật khẩu)
+-- ✅ ĐÃ THÊM: salt (Dùng cho PBKDF2 để mã hóa private key)
+-- ✅ ĐÃ THÊM: iv (Dùng cho AES-GCM để mã hóa private key)
+CREATE TABLE users (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(255) NOT NULL UNIQUE,
+    sdt VARCHAR(20) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL COMMENT 'Mật khẩu đã HASH (Bcrypt)',
+    avatar VARCHAR(512) NULL,
+    
+    -- CỘT MỚI CHO E2EE (LỚP 2)
+    public_key TEXT NOT NULL COMMENT 'Khóa RSA Công khai (dạng Base64)',
+    enc_private_key BLOB NOT NULL COMMENT 'Khóa RSA Riêng tư (đã mã hóa bằng AES-GCM từ mật khẩu)',
+    salt VARCHAR(255) NOT NULL COMMENT 'Salt (Base64) dùng cho PBKDF2',
+    iv VARCHAR(255) NOT NULL COMMENT 'IV (Base64) dùng cho AES-GCM mã hóa private key',
+    
+    -- Metadata
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL DEFAULT NULL,
+    is_suspended BOOLEAN NOT NULL DEFAULT FALSE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+-- 2. BẢNG FRIENDSHIPS (GIỮ NGUYÊN)
+CREATE TABLE friendships (
+    user_id_1 INT UNSIGNED NOT NULL,
+    user_id_2 INT UNSIGNED NOT NULL,
+    status ENUM('pending', 'accepted', 'blocked') NOT NULL DEFAULT 'pending',
+    action_user_id INT UNSIGNED NOT NULL,
+    PRIMARY KEY (user_id_1, user_id_2),
+    FOREIGN KEY (user_id_1) REFERENCES users(id) ON DELETE RESTRICT,
+    FOREIGN KEY (user_id_2) REFERENCES users(id) ON DELETE RESTRICT,
+    FOREIGN KEY (action_user_id) REFERENCES users(id) ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+-- 3. BẢNG GROUPS (GIỮ NGUYÊN)
+CREATE TABLE `groups` (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    creator_id INT UNSIGNED NOT NULL,
+    avatar VARCHAR(512) NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (creator_id) REFERENCES users(id) ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+-- 4. BẢNG GROUP_MEMBERS (GIỮ NGUYÊN)
+CREATE TABLE group_members (
+    group_id INT UNSIGNED NOT NULL,
+    member_id INT UNSIGNED NOT NULL,
+    role ENUM('admin', 'member') NOT NULL DEFAULT 'member',
+    PRIMARY KEY (group_id, member_id),
+    FOREIGN KEY (group_id) REFERENCES `groups`(id) ON DELETE CASCADE,
+    FOREIGN KEY (member_id) REFERENCES users(id) ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+-- 5. BẢNG MESSAGES (THAY THẾ HOÀN TOÀN private_messages VÀ group_messages)
+-- ✅ THAY ĐỔI: Bảng này lưu TẤT CẢ tin nhắn (cả 1:1 và nhóm)
+-- ✅ THAY ĐỔI: Chỉ lưu nội dung đã mã hóa AES (ciphertext)
+CREATE TABLE messages (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    sender_id INT UNSIGNED NOT NULL,
+    
+    -- conversation_id có thể là ID của nhóm (nếu group_id != NULL)
+    -- hoặc là ID của user (nếu là chat 1:1, tùy thiết kế)
+    -- Tạm thời dùng group_id (nullable) để phân biệt
+    group_id INT UNSIGNED NULL DEFAULT NULL COMMENT 'NULL nếu là tin 1:1, NOT NULL nếu là tin nhóm',
+    
+    -- Nội dung đã mã hóa AES-GCM
+    content_cipher BLOB NOT NULL COMMENT 'Nội dung đã mã hóa AES-GCM',
+    content_iv VARCHAR(255) NOT NULL COMMENT 'IV (Base64) dùng cho AES-GCM',
+    -- content_tag (Tag đã được GCM đưa vào cuối ciphertext)
+    
+    message_type ENUM('text', 'image', 'file', 'video', 'audio') NOT NULL DEFAULT 'text',
+    
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE RESTRICT,
+    FOREIGN KEY (group_id) REFERENCES `groups`(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+-- 6. BẢNG MESSAGE_KEYS (BẮT BUỘC CHO FLOW LỚP 2)
+-- ✅ BẢNG MỚI: Lưu khóa AES (đã mã hóa RSA) cho mỗi người nhận
+CREATE TABLE message_keys (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    msg_id BIGINT UNSIGNED NOT NULL COMMENT 'ID của tin nhắn trong bảng messages',
+    recipient_id INT UNSIGNED NOT NULL COMMENT 'ID của người nhận được khóa này',
+    
+    -- Khóa AES (dùng cho tin nhắn) đã được mã hóa bằng RSA Public Key của người nhận
+    enc_session_key TEXT NOT NULL COMMENT 'Khóa AES (Base64) đã mã hóa bằng RSA',
+    
+    FOREIGN KEY (msg_id) REFERENCES messages(id) ON DELETE CASCADE,
+    FOREIGN KEY (recipient_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+-- 7. BẢNG PRIVATE_CALLS (GIỮ NGUYÊN)
+CREATE TABLE private_calls (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    caller_id INT UNSIGNED NOT NULL,
+    receiver_id INT UNSIGNED NOT NULL,
+    call_type ENUM('audio', 'video') NOT NULL,
+    status ENUM('missed', 'completed', 'cancelled', 'failed', 'ringing') NOT NULL,
+    start_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    end_time TIMESTAMP NULL DEFAULT NULL,
+    FOREIGN KEY (caller_id) REFERENCES users(id) ON DELETE RESTRICT,
+    FOREIGN KEY (receiver_id) REFERENCES users(id) ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 8. BẢNG GROUP_CALLS (GIỮ NGUYÊN)
+CREATE TABLE group_calls (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    group_id INT UNSIGNED NOT NULL,
+    initiator_id INT UNSIGNED NOT NULL,
+    call_type ENUM('audio', 'video') NOT NULL,
+    status ENUM('active', 'ended') NOT NULL,
+    start_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    end_time TIMESTAMP NULL DEFAULT NULL,
+    FOREIGN KEY (group_id) REFERENCES `groups`(id) ON DELETE CASCADE,
+    FOREIGN KEY (initiator_id) REFERENCES users(id) ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Bảng user_keys (9) không còn cần thiết VÌ public_key đã được chuyển vào bảng users.
+-- Chúng ta sẽ giữ lại 8 bảng.
