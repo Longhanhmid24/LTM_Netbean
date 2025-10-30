@@ -3,10 +3,28 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
-            <file>file:/D:/DA_LTM/LTM_Netbean/Frontend/src/chatapp_client/ImageViewerFrame.java</file>
             <file>file:/D:/DA_LTM/LTM_Netbean/Frontend/src/chatapp_client/ChatForm.java</file>
-            <file>file:/D:/DA_LTM/LTM_Netbean/Frontend/src/chatapp_client/GroupChatForm.java</file>
+            <file>file:/D:/DA_LTM/LTM_Netbean/Frontend/src/chatapp_client/CreateGroupDialog.java</file>
+            <file>file:/D:/DA_LTM/LTM_Netbean/Frontend/src/model/ChatMessage.java</file>
+            <file>file:/D:/DA_LTM/LTM_Netbean/Frontend/src/model/FriendRequest.java</file>
+            <file>file:/D:/DA_LTM/LTM_Netbean/Frontend/src/model/Friendship.java</file>
+            <file>file:/D:/DA_LTM/LTM_Netbean/Frontend/src/model/GroupMember.java</file>
+            <file>file:/D:/DA_LTM/LTM_Netbean/Frontend/src/chatapp_client/ChatApp.java</file>
+            <file>file:/D:/DA_LTM/LTM_Netbean/Frontend/src/service/CryptoService.java</file>
+            <file>file:/D:/DA_LTM/LTM_Netbean/Frontend/src/util/LenientZonedDateTimeDeserializer.java</file>
             <file>file:/D:/DA_LTM/LTM_Netbean/Frontend/src/service/NetworkService.java</file>
+            <file>file:/D:/DA_LTM/LTM_Netbean/Frontend/src/chatapp_client/GroupChatForm.java</file>
+            <file>file:/D:/DA_LTM/LTM_Netbean/Frontend/src/model/GroupMessage.java</file>
+            <file>file:/D:/DA_LTM/LTM_Netbean/Frontend/src/chatapp_client/GroupListRenderer.java</file>
+            <file>file:/D:/DA_LTM/LTM_Netbean/Frontend/src/chatapp_client/GroupListPanel.java</file>
+            <file>file:/D:/DA_LTM/LTM_Netbean/Frontend/src/chatapp_client/ImageViewerFrame.java</file>
+            <file>file:/D:/DA_LTM/LTM_Netbean/Frontend/src/chatapp_client/FriendListPanel.java</file>
+            <file>file:/D:/DA_LTM/LTM_Netbean/Frontend/src/chatapp_client/MainForm.java</file>
+            <file>file:/D:/DA_LTM/LTM_Netbean/Frontend/src/chatapp_client/MainChatPanel.java</file>
+            <file>file:/D:/DA_LTM/LTM_Netbean/Frontend/src/chatapp_client/VideoCallFrame.java</file>
+            <file>file:/D:/DA_LTM/LTM_Netbean/Frontend/src/chatapp_client/IncomingCallDialog.java</file>
+            <file>file:/D:/DA_LTM/LTM_Netbean/Frontend/src/model/CallSignal.java</file>
+            <file>file:/D:/DA_LTM/LTM_Netbean/Frontend/src/chatapp_client/WelcomePanel.java</file>
             <file>file:/D:/DA_LTM/LTM_Netbean/Frontend/src/chatapp_client/MediaPlayerFrame.java</file>
         </group>
     </open-files>

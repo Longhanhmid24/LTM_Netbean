@@ -19,21 +19,26 @@ public class CallHistoryController {
         this.jdbcTemplate = jdbcTemplate;
     }
 
-    // ✅ Bắt đầu cuộc gọi
-    @PostMapping("/start")
-    public void startCall(@RequestBody CallRequest call) {
-        String sql = """
-            INSERT INTO private_calls (caller_id, receiver_id, call_type, status, start_time)
-            VALUES (?, ?, ?, 'ringing', ?)
-        """;
-        jdbcTemplate.update(sql,
-                call.getCallerId(),
-                call.getReceiverId(),
-                call.getCallType(),
-                LocalDateTime.now()
-        );
-        System.out.println("[CallHistoryController] 📞 Start call: " + call);
-    }
+        // ✅ Bắt đầu cuộc gọi — trả về callId
+        @PostMapping("/start")
+        public Long startCall(@RequestBody CallRequest call) {
+            String sql = """
+                INSERT INTO private_calls (caller_id, receiver_id, call_type, status, start_time)
+                VALUES (?, ?, ?, 'ringing', NOW())
+            """;
+
+            jdbcTemplate.update(sql,
+                    call.getCallerId(),
+                    call.getReceiverId(),
+                    call.getCallType()
+            );
+
+            // ✅ Lấy ID cuộc gọi vừa tạo
+            Long callId = jdbcTemplate.queryForObject("SELECT LAST_INSERT_ID()", Long.class);
+
+            System.out.println("[CallHistoryController] 📞 Start call ID = " + callId);
+            return callId;
+        }
 
     // ✅ Kết thúc cuộc gọi
     @PutMapping("/end/{id}")

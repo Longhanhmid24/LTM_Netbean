@@ -43,6 +43,8 @@ public class ChatForm extends JPanel {
     private int currentUserId;
     private int friendId;
     private WebSocketClient ws;
+    private JButton btnCallAudio;
+    private JButton btnCallVideo;
     
     public static final String DECRYPT_ERROR_PLACEHOLDER = "[Decryption Error]";
 
@@ -76,6 +78,8 @@ public class ChatForm extends JPanel {
         txtMsg.setToolTipText("Enter message and press Enter");
         btnSend = createStyledButton("Send", new Color(0, 122, 255));
         btnFile = createStyledButton("File", new Color(76, 175, 80));
+        btnCallAudio = createStyledButton("Call", new Color(52, 152, 219)); // Blue
+        btnCallVideo = createStyledButton("Video", new Color(231, 76, 60)); // Red
         progressBar = new JProgressBar(); progressBar.setVisible(false); progressBar.setStringPainted(true); progressBar.setForeground(new Color(0, 122, 255)); progressBar.setBackground(new Color(230, 230, 230));
     }
     
@@ -90,6 +94,13 @@ public class ChatForm extends JPanel {
         inputControls.add(btnSend, BorderLayout.EAST); 
         bottomPanel.add(btnFile, BorderLayout.WEST); 
         bottomPanel.add(inputControls, BorderLayout.CENTER); 
+        // ✅ thêm panel chứa 2 nút gọi
+        JPanel callPanel = new JPanel(new GridLayout(1, 2, 5, 0));
+        callPanel.setOpaque(false);
+        callPanel.add(btnCallAudio);
+        callPanel.add(btnCallVideo);
+
+        bottomPanel.add(callPanel, BorderLayout.EAST);
         JPanel southPanel = new JPanel(); 
         southPanel.setLayout(new BoxLayout(southPanel, BoxLayout.Y_AXIS)); 
         southPanel.add(progressBar); 
@@ -102,6 +113,9 @@ public class ChatForm extends JPanel {
         btnSend.addActionListener(e -> sendMessage()); 
         txtMsg.addActionListener(e -> sendMessage()); 
         btnFile.addActionListener(e -> chooseFile()); 
+        btnCallAudio.addActionListener(e -> startCall("audio"));
+        btnCallVideo.addActionListener(e -> startCall("video"));
+
     }
     
     private TransferHandler createFileDropHandler() { 
@@ -376,6 +390,43 @@ public class ChatForm extends JPanel {
          msg.setMessageType("text");
          msg.setDecryptedContent(DECRYPT_ERROR_PLACEHOLDER);
     }
+    
+    private void startCall(String type) {
+        System.out.println("🚀 Starting call to " + friendId + " type=" + type);
+
+        NetworkService.startCall(currentUserId, friendId, type)
+            .thenAccept(callId -> {
+
+                // gửi tín hiệu gọi qua WebSocket
+                String frame = """
+                SEND
+                destination:/app/call.send
+                content-type:application/json
+
+                {"type":"call_request","callerId":%d,"receiverId":%d,"callType":"%s"}\0
+                """.formatted(currentUserId, friendId, type);
+
+                ws.send(frame);
+
+                // mở UI cuộc gọi
+                    SwingUtilities.invokeLater(() -> {
+                        String url = "http://localhost:8080/call.html"
+                                + "?callId=" + callId
+                                + "&userId=" + currentUserId
+                                + "&peerId=" + friendId
+                                + "&type=" + type;
+
+                        try {
+                            Desktop.getDesktop().browse(new URI(url));
+                        } catch (Exception e) { e.printStackTrace(); }
+                    });
+            })
+            .exceptionally(ex -> {
+                JOptionPane.showMessageDialog(this, "Call error: " + ex.getMessage());
+                return null;
+            });
+    }
+
 
     private void loadHistory() {
         System.out.println("Loading 1:1 history (E2EE Lớp 2): " + currentUserId + " <-> " + friendId);
