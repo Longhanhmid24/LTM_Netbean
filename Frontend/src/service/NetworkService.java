@@ -1,6 +1,5 @@
 package service;
 
-// ... (Imports cũ: Group, GroupMember, ChatMessage, LoginResponse, RegisterRequest, MessageSendDTO, v.v.)
 import model.Group;
 import model.GroupMember;
 import model.GroupMessage;
@@ -9,9 +8,8 @@ import model.ChatMessage;
 import model.LoginResponse;
 import model.RegisterRequest;
 import model.MessageSendDTO;
-import model.Friendship; // ✅ IMPORT MỚI
-import model.FriendRequest; // ✅ IMPORT MỚI
-// ... (Các import Java, Jackson, WebSocket, HTTP còn lại) ...
+import model.Friendship;
+import model.FriendRequest;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -50,23 +48,27 @@ import util.LenientZonedDateTimeDeserializer;
 import java.security.PublicKey;
 import java.util.Base64;
 import javax.crypto.SecretKey;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import model.CallSignal;
+// ✅ IMPORT MỚI
+import java.awt.Component;
+import javax.swing.JOptionPane;
 
 public class NetworkService {
 
-    // ... (Constants, Mappers, và các hàm helper JSON giữ nguyên) ...
-    private static final String SERVER_IP = "192.168.1.230";
-    public static final String BASE_URL = "http://" + SERVER_IP + ":8080/api/";
-    public static final String WS_URL = "ws://" + SERVER_IP + ":8080/ws/raw";
+    // ✅ THAY ĐỔI: Bỏ 'final' và sửa 'API_BASE_URL'
+    private static String SERVER_IP = "192.168.92.1";
+    public static String BASE_URL = "http://" + SERVER_IP + ":8080/api/";
+    public static String WS_URL = "ws://" + SERVER_IP + ":8080/ws/raw";
+    
     private static final HttpClient httpClient = HttpClient.newBuilder().connectTimeout(java.time.Duration.ofSeconds(10)).build();
     private static final ObjectMapper MAPPER; // DB (Snake Case)
     private static final ObjectMapper STOMP_MAPPER; // DTO Nhận (CamelCase)
     private static final ObjectMapper SEND_MAPPER; // DTO Gửi (CamelCase)
-    private static final String API_BASE_URL = "http://localhost:8080";
+
+    // ✅ THAY ĐỔI: Sửa 'API_BASE_URL' từ 'final' và 'localhost'
+    private static String API_BASE_URL = "http://" + SERVER_IP + ":8080";
 
     static {
-        /* ... (Giữ nguyên) ... */
         ObjectMapper m1 = new ObjectMapper();
         m1.registerModule(new JavaTimeModule());
         m1.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
@@ -132,6 +134,33 @@ public class NetworkService {
     public static void init() {
         System.out.println("NetworkService initialized.");
     }
+    
+    // ✅ HÀM MỚI: Lấy IP hiện tại
+    public static String getServerIp() {
+        return SERVER_IP;
+    }
+
+    // ✅ HÀM MỚI: Cập nhật IP
+    public static void setServerIp(String newIp) {
+        if (newIp == null || newIp.trim().isEmpty()) {
+            System.err.println("setServerIp: IP không hợp lệ, không thay đổi.");
+            return;
+        }
+
+        SERVER_IP = newIp.trim();
+        BASE_URL = "http://" + SERVER_IP + ":8080/api/";
+        WS_URL = "ws://" + SERVER_IP + ":8080/ws/raw";
+        API_BASE_URL = "http://" + SERVER_IP + ":8080"; // Cũng cập nhật cái này
+
+        System.out.println("==============================================");
+        System.out.println("NetworkService IP ĐÃ ĐƯỢC CẬP NHẬT:");
+        System.out.println("IP: " + SERVER_IP);
+        System.out.println("BASE_URL: " + BASE_URL);
+        System.out.println("WS_URL: " + WS_URL);
+        System.out.println("API_BASE_URL: " + API_BASE_URL);
+        System.out.println("==============================================");
+    }
+
 
     public static String encodeUrlPath(String urlString) {
         try {
@@ -145,7 +174,6 @@ public class NetworkService {
 
     // --- API Methods (Auth & User) ---
     public static CompletableFuture<LoginResponse> login(String usernameOrSdt, String password) {
-        /* (Giữ nguyên) */
         return CompletableFuture.supplyAsync(() -> {
             try {
                 String jsonBody = SEND_MAPPER.writeValueAsString(Map.of("username", usernameOrSdt, "password", password));
@@ -174,7 +202,6 @@ public class NetworkService {
     }
 
     public static CompletableFuture<User> createUser(RegisterRequest requestDto) {
-        /* (Giữ nguyên) */
         return CompletableFuture.supplyAsync(() -> {
             try {
                 String jsonBody = SEND_MAPPER.writeValueAsString(requestDto);
@@ -211,7 +238,7 @@ public class NetworkService {
     }
 
     public static CompletableFuture<List<User>> getAllUsers() {
-        /* (Giữ nguyên) */ return CompletableFuture.supplyAsync(() -> {
+        return CompletableFuture.supplyAsync(() -> {
             try {
                 HttpRequest r = HttpRequest.newBuilder().uri(URI.create(BASE_URL + "users")).timeout(java.time.Duration.ofSeconds(15)).GET().build();
                 HttpResponse<String> rp = httpClient.send(r, HttpResponse.BodyHandlers.ofString());
@@ -226,7 +253,6 @@ public class NetworkService {
     }
 
     public static CompletableFuture<List<ChatMessage>> getMessages(int uId, int fId) {
-        /* (Giữ nguyên - Lớp 2) */
         return CompletableFuture.supplyAsync(() -> {
             try {
                 HttpRequest r = HttpRequest.newBuilder().uri(URI.create(BASE_URL + "messages/" + uId + "/" + fId)).timeout(java.time.Duration.ofSeconds(20)).GET().build();
@@ -275,7 +301,7 @@ public class NetworkService {
     }
 
     public static CompletableFuture<String> uploadFile(File file) {
-        /* (Giữ nguyên) */ return CompletableFuture.supplyAsync(() -> {
+        return CompletableFuture.supplyAsync(() -> {
             try {
                 String b = "----WebKitFormBoundary" + System.nanoTime();
                 var sb = new StringBuilder();
@@ -308,7 +334,7 @@ public class NetworkService {
 
     // --- API Bạn bè (MỚI) ---
     public static CompletableFuture<List<User>> getFriends(int userId) {
-        /* (Giữ nguyên) */ return CompletableFuture.supplyAsync(() -> {
+        return CompletableFuture.supplyAsync(() -> {
             try {
                 HttpRequest r = HttpRequest.newBuilder().uri(URI.create(BASE_URL + "friendships/" + userId + "/list")).timeout(java.time.Duration.ofSeconds(15)).GET().build();
                 HttpResponse<String> rp = httpClient.send(r, HttpResponse.BodyHandlers.ofString());
@@ -331,7 +357,7 @@ public class NetworkService {
     }
 
     public static CompletableFuture<List<FriendRequest>> getFriendRequests(int userId) {
-        /* (Giữ nguyên) */ return CompletableFuture.supplyAsync(() -> {
+        return CompletableFuture.supplyAsync(() -> {
             try {
                 HttpRequest r = HttpRequest.newBuilder().uri(URI.create(BASE_URL + "friendships/" + userId + "/requests")).timeout(java.time.Duration.ofSeconds(15)).GET().build();
                 HttpResponse<String> rp = httpClient.send(r, HttpResponse.BodyHandlers.ofString());
@@ -347,7 +373,7 @@ public class NetworkService {
     }
 
     public static CompletableFuture<Boolean> sendFriendRequest(int senderId, int receiverId) {
-        /* (Giữ nguyên) */ return CompletableFuture.supplyAsync(() -> {
+        return CompletableFuture.supplyAsync(() -> {
             try {
                 Friendship req = new Friendship(senderId, receiverId, "pending", senderId);
                 String jsonBody = req.toJson();
@@ -362,7 +388,7 @@ public class NetworkService {
     }
 
     public static CompletableFuture<Boolean> acceptFriendRequest(int senderId, int receiverId, int actionUserId) {
-        /* (Giữ nguyên) */ return CompletableFuture.supplyAsync(() -> {
+        return CompletableFuture.supplyAsync(() -> {
             try {
                 Friendship req = new Friendship(senderId, receiverId, "accepted", actionUserId);
                 String jsonBody = req.toJson();
@@ -377,7 +403,7 @@ public class NetworkService {
     }
 
     public static CompletableFuture<Boolean> removeFriend(int userId1, int userId2) {
-        /* (Giữ nguyên) */ return CompletableFuture.supplyAsync(() -> {
+        return CompletableFuture.supplyAsync(() -> {
             try {
                 Friendship req = new Friendship(userId1, userId2, null, 0);
                 String jsonBody = req.toJson();
@@ -575,7 +601,7 @@ public class NetworkService {
 
     // (Các API Nhóm giả định cũ)
     public static CompletableFuture<List<Group>> getGroupsForUser(int userId) {
-        /* (Giữ nguyên) */ String ep = BASE_URL + "groups/user/" + userId;
+        String ep = BASE_URL + "groups/user/" + userId;
         System.out.println("WARN: API nhóm: GET " + ep);
         return CompletableFuture.supplyAsync(() -> {
             try {
@@ -593,7 +619,7 @@ public class NetworkService {
     }
 
     public static CompletableFuture<List<GroupMessage>> getGroupMessages(int groupId) {
-        /* (Giữ nguyên) */ String ep = BASE_URL + "group-messages/" + groupId;
+        String ep = BASE_URL + "group-messages/" + groupId;
         System.out.println("WARN: API lịch sử nhóm: GET " + ep);
         return CompletableFuture.supplyAsync(() -> {
             try {
@@ -611,7 +637,7 @@ public class NetworkService {
     }
 
     public static CompletableFuture<List<GroupMember>> getGroupMembers(int groupId) {
-        /* (Giữ nguyên) */ return CompletableFuture.supplyAsync(() -> {
+        return CompletableFuture.supplyAsync(() -> {
             try {
                 HttpRequest r = HttpRequest.newBuilder().uri(URI.create(BASE_URL + "group-members/" + groupId)).timeout(java.time.Duration.ofSeconds(15)).GET().build();
                 HttpResponse<String> rp = httpClient.send(r, HttpResponse.BodyHandlers.ofString());
@@ -628,7 +654,7 @@ public class NetworkService {
 
     // --- WebSocket (Giữ nguyên) ---
     public static WebSocketClient connectWS(int userId, WSMessageListener listener) {
-        /* (Giữ nguyên) */ URI u;
+        URI u;
         try {
             u = new URI(WS_URL);
         } catch (Exception e) {
@@ -694,7 +720,7 @@ public class NetworkService {
 
     public interface WSMessageListener {
 
-        /* (Giữ nguyên) */ void onStompConnected();
+        void onStompConnected();
 
         void onMessageReceived(String h, String b);
 
@@ -707,7 +733,7 @@ public class NetworkService {
 
     // --- E2EE (RSA Key) API Methods ---
     public static CompletableFuture<PublicKey> getPublicKey(int fId) {
-        /* (Giữ nguyên) */ if (KeyService.isPublicRSAKeyCached(fId)) {
+        if (KeyService.isPublicRSAKeyCached(fId)) {
             return CompletableFuture.completedFuture(KeyService.getPublicRSAKey(fId));
         }
         return CompletableFuture.supplyAsync(() -> {
@@ -734,7 +760,7 @@ public class NetworkService {
     }
 
     public static CompletableFuture<Boolean> uploadPublicKey(int uId, String pkStr) {
-        /* (Giữ nguyên) */ return CompletableFuture.supplyAsync(() -> {
+        return CompletableFuture.supplyAsync(() -> {
             try {
                 String j = SEND_MAPPER.writeValueAsString(Map.of("publicKey", pkStr));
                 HttpRequest r = HttpRequest.newBuilder().uri(URI.create(BASE_URL + "keys/" + uId)).header("Content-Type", "application/json").timeout(java.time.Duration.ofSeconds(15)).POST(HttpRequest.BodyPublishers.ofString(j)).build();
