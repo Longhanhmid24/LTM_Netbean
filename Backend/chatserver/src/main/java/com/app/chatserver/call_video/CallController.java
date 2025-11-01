@@ -14,16 +14,26 @@ public class CallController {
         this.messagingTemplate = messagingTemplate;
     }
 
-    @MessageMapping("/call.send")
-    public void sendSignal(CallSignal signal) {
+@MessageMapping("/call.send")
+public void sendSignal(CallSignal signal) {
 
-        System.out.println("[CallController] 🔁 Signal từ "
-                + signal.getCallerId() + " → "
-                + signal.getReceiverId()
-                + " | Type: " + signal.getType());
+    System.out.println("[CallController] 🔁 Signal từ "
+            + signal.getCallerId() + " → "
+            + signal.getReceiverId()
+            + " | Type: " + signal.getType());
 
+    // Bước 1: Khi có yêu cầu gọi đến => báo cho người nhận
+    if ("call_request".equals(signal.getType())) {
         messagingTemplate.convertAndSend(
-                "/queue/call/" + signal.getReceiverId(), signal
+                "/queue/call/" + signal.getReceiverId(),
+                signal
         );
+        return;
     }
+
+    // Bước 2: OFFER / ANSWER / CANDIDATE / HANGUP
+    messagingTemplate.convertAndSend(
+            "/queue/call/" + signal.getReceiverId(), signal
+    );
+}
 }

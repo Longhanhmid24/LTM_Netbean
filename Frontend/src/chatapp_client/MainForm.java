@@ -208,7 +208,9 @@ public class MainForm extends javax.swing.JFrame {
                             + "?callId=" + signal.getCallId()
                             + "&userId=" + loggedInUserId
                             + "&peerId=" + signal.getCallerId()
-                            + "&type=" + signal.getCallType(); // Dùng getCallType()
+                            + "&type=" + signal.getCallType()// Dùng getCallType()
+                             + "&isCaller=false"; // ⬅️ thêm
+                    
 
                     Desktop.getDesktop().browse(new URI(callUrl));
                 } catch (Exception e) {

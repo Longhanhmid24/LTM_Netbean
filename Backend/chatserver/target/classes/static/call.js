@@ -32,6 +32,7 @@ const callId = url.searchParams.get("callId");
 const userId = Number(url.searchParams.get("userId"));
 const peerId = Number(url.searchParams.get("peerId"));
 const callType = url.searchParams.get("type") || "video";
+const isCaller = url.searchParams.get("isCaller") === "true";
 document.getElementById("peerLabel").innerText = peerId;
 
 /* ===== WebRTC Setup ===== */
@@ -111,7 +112,54 @@ stomp.connect({}, () => {
     
     // ✅ Giữ nguyên logic gốc của bạn
     // Nếu là người gọi (người có userId nhỏ hơn) thì bắt đầu cuộc gọi ngay
-    if (userId < peerId) startCall();
+    if (userId < peerId) startCall();stomp.connect({}, async () => {
+  stomp.subscribe(`/queue/call/${userId}`, async msg => {
+    const signal = JSON.parse(msg.body);
+
+    if (signal.type === "call_request") {
+      // Người nhận chỉ hiển thị UI & CHỜ offer, không tạo offer.
+      return;
+    }
+
+    if (signal.type === "offer") {
+      try {
+        await initWebRTC();                                   // bật cam/mic bên nhận
+        await pc.setRemoteDescription({ type: "offer", sdp: signal.sdp });
+
+        // add các ICE đến sớm
+        for (const cand of pendingCandidates) {
+          try { await pc.addIceCandidate(cand); } catch (e) { console.warn("late ICE add failed:", e); }
+        }
+        pendingCandidates = [];
+
+        const answer = await pc.createAnswer();
+        await pc.setLocalDescription(answer);
+        sendSignal("answer", { sdp: answer.sdp });
+      } catch (e) {
+        console.error("Error handling OFFER:", e);
+      }
+    } else if (signal.type === "answer") {
+      if (!signal.sdp) return;
+      try { await pc.setRemoteDescription({ type: "answer", sdp: signal.sdp }); }
+      catch (e) { console.error("Error setting ANSWER:", e); }
+    } else if (signal.type === "candidate") {
+      try {
+        const candidate = JSON.parse(signal.candidate);
+        if (!pc || !pc.remoteDescription) pendingCandidates.push(candidate);
+        else await pc.addIceCandidate(candidate);
+      } catch (e) {
+        console.error("Lỗi khi thêm ICE candidate:", e, signal.candidate);
+      }
+    } else if (signal.type === "hangup") {
+      endCallUI();
+    }
+  });
+
+  // ✅ Chỉ người GỌI mới tạo offer
+  if (isCaller) {
+    await startCall();
+  }
+});
 });
 
 /* ==== Functions ==== */

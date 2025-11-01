@@ -414,7 +414,8 @@ public class ChatForm extends JPanel {
                         + "?callId=" + callId
                         + "&userId=" + currentUserId
                         + "&peerId=" + friendId
-                        + "&type=" + type;
+                        + "&type=" + type
+                        + "&isCaller=true"; // ⬅️ thêm
 
                 try {
                     Desktop.getDesktop().browse(new URI(url));
