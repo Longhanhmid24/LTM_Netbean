@@ -203,25 +203,31 @@ public class MainForm extends javax.swing.JFrame {
 
             private void acceptCall(CallSignal signal) {
                 try {
-                    String callUrl = "http://localhost:8080/call.html"
+                    String baseUrl = NetworkService.API_BASE_URL; // DÙNG IP ĐỘNG
+                    String callUrl = baseUrl + "/call.html"
                             + "?callId=" + signal.getCallId()
                             + "&userId=" + loggedInUserId
                             + "&peerId=" + signal.getCallerId()
-                            + "&type=" + signal.getType();
+                            + "&type=" + signal.getCallType(); // Dùng getCallType()
 
                     Desktop.getDesktop().browse(new URI(callUrl));
-                } catch (Exception e) { e.printStackTrace(); }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    JOptionPane.showMessageDialog(MainForm.this, "Không thể mở cuộc gọi: " + e.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+                }
 
-                // gửi answer signal
+                // Gửi answer signal
                 String frame = """
-                    SEND
-                    destination:/app/call.send
-                    content-type:application/json
+        SEND
+        destination:/app/call.send
+        content-type:application/json
 
-                    {"type":"answer","callerId":%d,"receiverId":%d,"callId":%d}\0
-                    """.formatted(signal.getReceiverId(), signal.getCallerId(), signal.getCallId());
+        {"type":"answer","callerId":%d,"receiverId":%d,"callId":%d}\0
+        """.formatted(loggedInUserId, signal.getCallerId(), signal.getCallId());
 
-                sharedWebSocketClient.send(frame);
+                if (sharedWebSocketClient != null && sharedWebSocketClient.isOpen()) {
+                    sharedWebSocketClient.send(frame);
+                }
             }
 
             private void rejectCall(CallSignal signal) {

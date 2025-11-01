@@ -34,6 +34,8 @@ public class CallSignal {
     public Long getCallId() { return callId; }
     public void setCallId(Long callId) { this.callId = callId; }
 
+    public String getCallType() { return type; } // THÊM
+    
     @Override
     public String toString() {
         return "CallSignal{" +

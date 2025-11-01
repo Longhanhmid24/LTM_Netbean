@@ -3,8 +3,13 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
+            <file>file:/D:/test/LTM_Netbean/Frontend/src/chatapp_client/VideoCallFrame.java</file>
             <file>file:/D:/test/LTM_Netbean/Frontend/src/service/NetworkService.java</file>
-            <file>file:/D:/test/LTM_Netbean/Frontend/src/chatapp_client/LoginForm.java</file>
+            <file>file:/D:/test/LTM_Netbean/Frontend/src/service/KeyService.java</file>
+            <file>file:/D:/test/LTM_Netbean/Frontend/src/service/CryptoService.java</file>
+            <file>file:/D:/test/LTM_Netbean/Frontend/src/model/CallSignal.java</file>
+            <file>file:/D:/test/LTM_Netbean/Frontend/src/chatapp_client/MainForm.java</file>
+            <file>file:/D:/test/LTM_Netbean/Frontend/src/chatapp_client/ChatForm.java</file>
         </group>
     </open-files>
 </project-private>

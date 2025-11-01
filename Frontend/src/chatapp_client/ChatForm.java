@@ -392,13 +392,12 @@ public class ChatForm extends JPanel {
     }
     
     private void startCall(String type) {
-        System.out.println("🚀 Starting call to " + friendId + " type=" + type);
+    System.out.println("Starting call to " + friendId + " type=" + type);
 
-        NetworkService.startCall(currentUserId, friendId, type)
-            .thenAccept(callId -> {
-
-                // gửi tín hiệu gọi qua WebSocket
-                String frame = """
+    NetworkService.startCall(currentUserId, friendId, type)
+        .thenAccept(callId -> {
+            // Gửi tín hiệu gọi qua WebSocket
+            String frame = """
                 SEND
                 destination:/app/call.send
                 content-type:application/json
@@ -406,26 +405,30 @@ public class ChatForm extends JPanel {
                 {"type":"call_request","callerId":%d,"receiverId":%d,"callType":"%s"}\0
                 """.formatted(currentUserId, friendId, type);
 
-                ws.send(frame);
+            ws.send(frame);
 
-                // mở UI cuộc gọi
-                    SwingUtilities.invokeLater(() -> {
-                        String url = "http://localhost:8080/call.html"
-                                + "?callId=" + callId
-                                + "&userId=" + currentUserId
-                                + "&peerId=" + friendId
-                                + "&type=" + type;
+            // MỞ UI CUỘC GỌI DÙNG IP ĐỘNG
+            SwingUtilities.invokeLater(() -> {
+                String baseUrl = NetworkService.API_BASE_URL; // DÙNG API_BASE_URL
+                String url = baseUrl + "/call.html"
+                        + "?callId=" + callId
+                        + "&userId=" + currentUserId
+                        + "&peerId=" + friendId
+                        + "&type=" + type;
 
-                        try {
-                            Desktop.getDesktop().browse(new URI(url));
-                        } catch (Exception e) { e.printStackTrace(); }
-                    });
-            })
-            .exceptionally(ex -> {
-                JOptionPane.showMessageDialog(this, "Call error: " + ex.getMessage());
-                return null;
+                try {
+                    Desktop.getDesktop().browse(new URI(url));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    JOptionPane.showMessageDialog(this, "Không thể mở trình duyệt: " + e.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+                }
             });
-    }
+        })
+        .exceptionally(ex -> {
+            JOptionPane.showMessageDialog(this, "Lỗi khởi tạo cuộc gọi: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+            return null;
+        });
+}
 
 
     private void loadHistory() {

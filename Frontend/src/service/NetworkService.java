@@ -66,7 +66,7 @@ public class NetworkService {
     private static final ObjectMapper SEND_MAPPER; // DTO Gửi (CamelCase)
 
     // ✅ THAY ĐỔI: Sửa 'API_BASE_URL' từ 'final' và 'localhost'
-    private static String API_BASE_URL = "http://" + SERVER_IP + ":8080";
+    public static String API_BASE_URL = "http://" + SERVER_IP + ":8080";
 
     static {
         ObjectMapper m1 = new ObjectMapper();
