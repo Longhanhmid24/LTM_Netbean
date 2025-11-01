@@ -1,0 +1,92 @@
+body {
+  margin: 0;
+  background: #0f0f0f;
+  font-family: Arial, sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  overflow: hidden;
+  color: white;
+}
+
+#call-box {
+  width: 96%;
+  height: 96%;
+  background: #141414;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+  position: relative;
+}
+
+#caller-info {
+  position: absolute;
+  top: 15px;
+  left: 15px;
+  background: rgba(0, 0, 0, 0.5);
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 18px;
+}
+
+#videos {
+  flex: 1;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#remoteVideo {
+  width: 100%;
+  height: 100%;
+  background: #000;
+  object-fit: cover;
+  border-radius: 12px;
+}
+
+#localVideo {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  width: 200px;
+  height: 140px;
+  border-radius: 10px;
+  border: 2px solid white;
+  object-fit: cover;
+  background: black;
+}
+
+#controls {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  padding: 15px;
+}
+
+.control-btn {
+  width: 65px;
+  height: 65px;
+  border-radius: 50%;
+  border: none;
+  font-size: 28px;
+  cursor: pointer;
+  background: #3a3a3a;
+  transition: .2s;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.control-btn.end {
+  background: #ff3b3b;
+}
+
+.control-btn.off {
+  background: #6b6b6b !important;
+}
+.control-btn:hover {
+  transform: scale(1.1);
+}
