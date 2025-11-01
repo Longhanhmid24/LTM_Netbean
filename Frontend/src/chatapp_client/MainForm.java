@@ -217,17 +217,18 @@ public class MainForm extends javax.swing.JFrame {
                 }
 
                 // Gửi answer signal
-                String frame = """
-        SEND
-        destination:/app/call.send
-        content-type:application/json
-
-        {"type":"answer","callerId":%d,"receiverId":%d,"callId":%d}\0
-        """.formatted(loggedInUserId, signal.getCallerId(), signal.getCallId());
-
-                if (sharedWebSocketClient != null && sharedWebSocketClient.isOpen()) {
-                    sharedWebSocketClient.send(frame);
-                }
+//                String frame = """
+//        SEND
+//        destination:/app/call.send
+//        content-type:application/json
+//
+//        {"type":"answer","callerId":%d,"receiverId":%d,"callId":%d}\0
+//        """.formatted(loggedInUserId, signal.getCallerId(), signal.getCallId());
+//
+//                if (sharedWebSocketClient != null && sharedWebSocketClient.isOpen()) {
+//                    sharedWebSocketClient.send(frame);
+//                }
+                System.out.println("✅ Browser sẽ gửi SDP answer, không gửi answer từ Java");
             }
 
             private void rejectCall(CallSignal signal) {

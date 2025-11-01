@@ -1,234 +1,37 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <title>Cuộc gọi video</title>
+    <meta charset="UTF-8">
+    <title>Cuộc gọi video</title>
+    <!-- BẮT BUỘC SỬ DỤNG ĐƯỜNG DẪN TUYỆT ĐỐI BẮT ĐẦU BẰNG '/' -->
+    
+<link rel="stylesheet" href="/call.css">
 
-  <!-- SockJS + STOMP -->
-  <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
-
-  <style>
-    body {
-      margin: 0; font-family: Arial, sans-serif;
-      background: #0f0f0f; color: white;
-      display: flex; justify-content: center; align-items: center;
-      height: 100vh; overflow: hidden;
-    }
-
-    #call-box {
-      width: 90%; height: 90%;
-      background: #1b1b1b;
-      border-radius: 14px;
-      display: flex; flex-direction: column;
-      padding: 10px;
-      position: relative;
-    }
-
-    /* Video layout */
-    #videos {
-      flex: 1; position: relative;
-      display: flex; justify-content: center; align-items: center;
-    }
-
-    #remoteVideo {
-      width: 100%; height: 100%;
-      background: #000; border-radius: 14px; object-fit: cover;
-    }
-
-    #localVideo {
-      position: absolute; bottom: 15px; right: 15px;
-      width: 180px; height: 120px;
-      border: 2px solid white; border-radius: 10px;
-      object-fit: cover; background: black;
-    }
-
-    /* Top info */
-    #caller-info {
-      position: absolute; top: 10px; left: 10px;
-      font-size: 18px; padding: 6px 12px;
-      background: rgba(0,0,0,0.6); border-radius: 8px;
-    }
-
-    /* Call controls */
-    #controls {
-      display: flex; justify-content: center; gap: 16px;
-      margin-top: 15px; padding: 12px;
-    }
-
-    .control-btn {
-      width: 60px; height: 60px;
-      border-radius: 50%; border: none; cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 22px; transition: .2s;
-    }
-
-    #btnMic { background: #3a3a3a; }
-    #btnCam { background: #3a3a3a; }
-    #btnEnd { background: #ff3b3b; }
-
-    .control-btn:hover { opacity: .8; }
-  </style>
+    <!-- SockJS + STOMP -->
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
 </head>
 
 <body>
 
-  <div id="call-box">
-    <div id="caller-info">
-      Đang gọi với người dùng <span id="peerLabel"></span>
+    <div id="call-box">
+        <div id="caller-info">
+            Đang gọi với người dùng <span id="peerLabel"></span>
+        </div>
+
+        <div id="videos">
+            <video id="remoteVideo" autoplay playsinline></video>
+            <video id="localVideo" autoplay muted playsinline></video>
+        </div>
+
+        <div id="controls">
+            <button id="btnMic" class="control-btn">Mic</button>
+            <button id="btnCam" class="control-btn">Cam</button>
+            <button id="btnEnd" class="control-btn">End</button>
+        </div>
     </div>
 
-    <div id="videos">
-      <video id="remoteVideo" autoplay playsinline></video>
-      <video id="localVideo" autoplay muted playsinline></video>
-    </div>
-
-    <div id="controls">
-      <button id="btnMic" class="control-btn">Mic</button>
-      <button id="btnCam" class="control-btn">Cam</button>
-      <button id="btnEnd" class="control-btn">End</button>
-    </div>
-  </div>
-
-  <script>
-    /* ===== FIX: BẮT BUỘC DÙNG IP ĐỘNG ===== */
-    if (location.protocol === 'http:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
-      // Ép trình duyệt cung cấp mediaDevices dù không phải secure context
-      Object.defineProperty(navigator, 'mediaDevices', {
-        value: {
-          getUserMedia: function(constraints) {
-            return new Promise((resolve, reject) => {
-              const getUserMedia = 
-                navigator.webkitGetUserMedia || 
-                navigator.mozGetUserMedia || 
-                navigator.msGetUserMedia || 
-                navigator.getUserMedia;
-
-              if (getUserMedia) {
-                getUserMedia.call(navigator, constraints, resolve, reject);
-              } else {
-                reject(new Error('getUserMedia not supported'));
-              }
-            });
-          },
-          enumerateDevices: () => Promise.resolve([]),
-          getSupportedConstraints: () => ({})
-        },
-        writable: false,
-        configurable: false
-      });
-    }
-
-    /* ===== Get URL params ===== */
-    const url = new URL(window.location.href);
-    const callId = url.searchParams.get("callId");
-    const userId = Number(url.searchParams.get("userId"));
-    const peerId = Number(url.searchParams.get("peerId"));
-    const callType = url.searchParams.get("type") || "video";
-    document.getElementById("peerLabel").innerText = peerId;
-
-    /* ===== WebRTC Setup ===== */
-    let pc, localStream;
-    const localVideo = document.getElementById("localVideo");
-    const remoteVideo = document.getElementById("remoteVideo");
-
-    /* ==== WebSocket Signaling (dùng relative path → tự theo IP) ==== */
-    const socket = new SockJS("/ws/call"); // → ws://192.168.92.1:8080/ws/call
-    const stomp = Stomp.over(socket);
-
-    stomp.connect({}, () => {
-      stomp.subscribe(`/queue/call/${userId}`, async msg => {
-        const signal = JSON.parse(msg.body);
-
-        if (signal.type === "offer") {
-          await initWebRTC();
-          await pc.setRemoteDescription({ type: "offer", sdp: signal.sdp });
-          const answer = await pc.createAnswer();
-          await pc.setLocalDescription(answer);
-          sendSignal("answer", { sdp: answer.sdp });
-        }
-        else if (signal.type === "answer") {
-          await pc.setRemoteDescription({ type: "answer", sdp: signal.sdp });
-        }
-        else if (signal.type === "candidate") {
-          pc.addIceCandidate(JSON.parse(signal.candidate));
-        }
-        else if (signal.type === "hangup") {
-          endCallUI();
-        }
-      });
-    });
-
-    /* ==== Functions ==== */
-    async function initWebRTC() {
-      if (!navigator.mediaDevices?.getUserMedia) {
-        alert("Trình duyệt không hỗ trợ camera/microphone.");
-        return;
-      }
-
-      pc = new RTCPeerConnection();
-
-      pc.onicecandidate = e => {
-        if (e.candidate) sendSignal("candidate", { candidate: JSON.stringify(e.candidate) });
-      };
-
-      pc.ontrack = e => remoteVideo.srcObject = e.streams[0];
-
-      localStream = await navigator.mediaDevices.getUserMedia(
-        callType === "video" ? { video: true, audio: true } : { audio: true }
-      );
-
-      localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
-      localVideo.srcObject = localStream;
-    }
-
-    async function startCall() {
-      await initWebRTC();
-      const offer = await pc.createOffer();
-      await pc.setLocalDescription(offer);
-      sendSignal("offer", { sdp: offer.sdp });
-    }
-
-    function sendSignal(type, data = {}) {
-      stomp.send("/app/call.send", {}, JSON.stringify({
-        callId,
-        callerId: userId,
-        receiverId: peerId,
-        type,
-        ...data
-      }));
-    }
-
-    /* ===== UI buttons ===== */
-    document.getElementById("btnMic").onclick = () => {
-      const track = localStream.getAudioTracks()[0];
-      if (track) {
-        track.enabled = !track.enabled;
-        document.getElementById("btnMic").style.opacity = track.enabled ? "1" : "0.5";
-      }
-    };
-
-    document.getElementById("btnCam").onclick = () => {
-      const track = localStream.getVideoTracks()[0];
-      if (track) {
-        track.enabled = !track.enabled;
-        document.getElementById("btnCam").style.opacity = track.enabled ? "1" : "0.5";
-      }
-    };
-
-    document.getElementById("btnEnd").onclick = () => {
-      sendSignal("hangup");
-      endCallUI();
-    };
-
-    function endCallUI() {
-      if (localStream) localStream.getTracks().forEach(t => t.stop());
-      if (pc) pc.close();
-      window.close();
-    }
-
-    /* Auto start if caller */
-    if (userId < peerId) startCall();
-  </script>
+    <!-- BẮT BUỘC SỬ DỤNG ĐƯỜNG DẪN TUYỆT ĐỐI BẮT ĐẦU BẰNG '/' -->
+   <script src="/call.js"></script>
 </body>
 </html>
