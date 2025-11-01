@@ -203,34 +203,39 @@ public class MainForm extends javax.swing.JFrame {
 
             private void acceptCall(CallSignal signal) {
                 try {
-                    String baseUrl = NetworkService.API_BASE_URL; // DÙNG IP ĐỘNG
+                    String baseUrl = NetworkService.API_BASE_URL;
+
+                    // ✅ FIX: Đảm bảo lấy đúng callType
+                    String actualCallType = signal.getCallType(); // Phải là "video" hoặc "audio"
+
+                    // Debug log để kiểm tra
+                    System.out.println("=== ACCEPT CALL DEBUG ===");
+                    System.out.println("signal.getType(): " + signal.getType());           // "call_request"
+                    System.out.println("signal.getCallType(): " + signal.getCallType());   // Phải là "video"
+                    System.out.println("========================");
+
+                    // Kiểm tra nếu callType bị null hoặc sai
+                    if (actualCallType == null || actualCallType.equals("call_request")) {
+                        System.err.println("⚠️ WARNING: callType is invalid! Using 'video' as default.");
+                        actualCallType = "video"; // Fallback
+                    }
+
                     String callUrl = baseUrl + "/call.html"
                             + "?callId=" + signal.getCallId()
                             + "&userId=" + loggedInUserId
                             + "&peerId=" + signal.getCallerId()
-                            + "&type=" + signal.getCallType()// Dùng getCallType()
-                             + "&isCaller=false"; // ⬅️ thêm
-                    
+                            + "&type=" + actualCallType // ✅ Dùng callType đã validate
+                            + "&isCaller=false";
 
+                    System.out.println("📞 Opening URL: " + callUrl);
                     Desktop.getDesktop().browse(new URI(callUrl));
                 } catch (Exception e) {
                     e.printStackTrace();
-                    JOptionPane.showMessageDialog(MainForm.this, "Không thể mở cuộc gọi: " + e.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(MainForm.this,
+                            "Không thể mở cuộc gọi: " + e.getMessage(),
+                            "Lỗi",
+                            JOptionPane.ERROR_MESSAGE);
                 }
-
-                // Gửi answer signal
-//                String frame = """
-//        SEND
-//        destination:/app/call.send
-//        content-type:application/json
-//
-//        {"type":"answer","callerId":%d,"receiverId":%d,"callId":%d}\0
-//        """.formatted(loggedInUserId, signal.getCallerId(), signal.getCallId());
-//
-//                if (sharedWebSocketClient != null && sharedWebSocketClient.isOpen()) {
-//                    sharedWebSocketClient.send(frame);
-//                }
-                System.out.println("✅ Browser sẽ gửi SDP answer, không gửi answer từ Java");
             }
 
             private void rejectCall(CallSignal signal) {

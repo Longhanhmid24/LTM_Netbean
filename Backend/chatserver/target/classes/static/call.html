@@ -2,36 +2,83 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Cuộc gọi video</title>
-    <!-- BẮT BUỘC SỬ DỤNG ĐƯỜNG DẪN TUYỆT ĐỐI BẮT ĐẦU BẰNG '/' -->
-    
-<link rel="stylesheet" href="/call.css">
-
-    <!-- SockJS + STOMP -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Call</title>
+    <link rel="stylesheet" href="/call.css">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
 </head>
-
 <body>
-
-    <div id="call-box">
-        <div id="caller-info">
-            Đang gọi với người dùng <span id="peerLabel"></span>
+    <!-- Main container -->
+    <div id="call-container">
+        <!-- Call status & timer -->
+        <div id="call-status">
+            <div id="call-info">
+                <i class="fas fa-phone-alt"></i>
+                <span id="peer-name">Đang gọi với <span id="peerLabel"></span></span>
+            </div>
+            <div id="call-timer">00:00</div>
         </div>
 
-        <div id="videos">
-            <video id="remoteVideo" autoplay playsinline></video>
-            <video id="localVideo" autoplay muted playsinline></video>
+        <!-- Video streams -->
+        <div id="video-container">
+            <div id="remote-stream">
+                <video id="remoteVideo" autoplay playsinline></video>
+                <!-- Loading spinner for remote video -->
+                <div id="remote-loading" class="loading-spinner">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <span>Đang kết nối...</span>
+                </div>
+            </div>
+            <div id="local-stream">
+                <video id="localVideo" autoplay muted playsinline></video>
+                <!-- Camera off overlay -->
+                <div id="camera-off-overlay" class="hidden">
+                    <i class="fas fa-video-slash"></i>
+                </div>
+            </div>
         </div>
 
+        <!-- Call controls -->
         <div id="controls">
-            <button id="btnMic" class="control-btn">Mic</button>
-            <button id="btnCam" class="control-btn">Cam</button>
-            <button id="btnEnd" class="control-btn">End</button>
+            <button id="btnMic" class="control-btn" title="Tắt/Bật micro">
+                <i class="fas fa-microphone"></i>
+            </button>
+            <button id="btnCam" class="control-btn" title="Tắt/Bật camera">
+                <i class="fas fa-video"></i>
+            </button>
+            <button id="btnScreen" class="control-btn" title="Chia sẻ màn hình">
+                <i class="fas fa-desktop"></i>
+            </button>
+            <button id="btnEnd" class="control-btn end-call" title="Kết thúc">
+                <i class="fas fa-phone-slash"></i>
+            </button>
+        </div>
+
+        <!-- Connection status -->
+        <div id="connection-status"></div>
+    </div>
+
+    <!-- Incoming call dialog -->
+    <div id="incoming-call" class="hidden">
+        <div class="call-header">
+            <i class="fas fa-phone-volume"></i>
+            <h3>Cuộc gọi đến</h3>
+        </div>
+        <div class="call-actions">
+            <button id="btnAccept" class="accept">
+                <i class="fas fa-phone"></i>
+                Trả lời
+            </button>
+            <button id="btnReject" class="reject">
+                <i class="fas fa-phone-slash"></i>
+                Từ chối
+            </button>
         </div>
     </div>
 
-    <!-- BẮT BUỘC SỬ DỤNG ĐƯỜNG DẪN TUYỆT ĐỐI BẮT ĐẦU BẰNG '/' -->
-   <script src="/call.js"></script>
+    <script src="/call.js"></script>
 </body>
 </html>

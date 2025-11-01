@@ -48,119 +48,6 @@ const remoteVideo = document.getElementById("remoteVideo");
 const socket = new SockJS("/ws/call"); // → ws://[YOUR_IP]:8080/ws/call
 const stomp = Stomp.over(socket);
 
-stomp.connect({}, () => {
-    stomp.subscribe(`/queue/call/${userId}`, async msg => {
-        const signal = JSON.parse(msg.body);
-        // console.log("SIGNAL =>", signal);
-
-        // ✅ FIX: Khi có yêu cầu gọi đến, chỉ hiển thị UI & CHỜ offer (không tự offer)
-        if (signal.type === "call_request") {
-            // console.log("📞 Incoming call — waiting for OFFER…");
-            return;
-        }
-
-        if (signal.type === "offer") {
-            try {
-                // ✅ FIX: Người nhận phải init tại đây để bật cam/mic
-                await initWebRTC();
-
-                await pc.setRemoteDescription({ type: "offer", sdp: signal.sdp });
-
-                // ✅ FIX: thêm mọi ICE đã đợi trước đó (nếu có)
-                for (const cand of pendingCandidates) {
-                    try { await pc.addIceCandidate(cand); } catch (e) { console.warn("late ICE add failed:", e); }
-                }
-                pendingCandidates = [];
-
-                const answer = await pc.createAnswer();
-                await pc.setLocalDescription(answer);
-                sendSignal("answer", { sdp: answer.sdp });
-            } catch (e) {
-                console.error("Error handling OFFER:", e);
-            }
-        }
-        else if (signal.type === "answer") {
-            // ✅ FIX: Chặn answer rỗng (từ server) làm crash 'v='
-            if (!signal.sdp) {
-                console.warn("⚠️ Received ANSWER without SDP — skip.");
-                return;
-            }
-            try {
-                await pc.setRemoteDescription({ type: "answer", sdp: signal.sdp });
-            } catch (e) {
-                console.error("Error setting ANSWER:", e);
-            }
-        }
-        else if (signal.type === "candidate") {
-            try {
-                const candidate = JSON.parse(signal.candidate);
-
-                // ✅ FIX: Nếu chưa có remoteDescription ⇒ tạm xếp hàng
-                if (!pc || !pc.remoteDescription) {
-                    pendingCandidates.push(candidate);
-                } else {
-                    await pc.addIceCandidate(candidate);
-                }
-            } catch (e) {
-                console.error("Lỗi khi thêm ICE candidate:", e, signal.candidate);
-            }
-        }
-        else if (signal.type === "hangup") {
-            endCallUI();
-        }
-    });
-    
-    // ✅ Giữ nguyên logic gốc của bạn
-    // Nếu là người gọi (người có userId nhỏ hơn) thì bắt đầu cuộc gọi ngay
-    if (userId < peerId) startCall();stomp.connect({}, async () => {
-  stomp.subscribe(`/queue/call/${userId}`, async msg => {
-    const signal = JSON.parse(msg.body);
-
-    if (signal.type === "call_request") {
-      // Người nhận chỉ hiển thị UI & CHỜ offer, không tạo offer.
-      return;
-    }
-
-    if (signal.type === "offer") {
-      try {
-        await initWebRTC();                                   // bật cam/mic bên nhận
-        await pc.setRemoteDescription({ type: "offer", sdp: signal.sdp });
-
-        // add các ICE đến sớm
-        for (const cand of pendingCandidates) {
-          try { await pc.addIceCandidate(cand); } catch (e) { console.warn("late ICE add failed:", e); }
-        }
-        pendingCandidates = [];
-
-        const answer = await pc.createAnswer();
-        await pc.setLocalDescription(answer);
-        sendSignal("answer", { sdp: answer.sdp });
-      } catch (e) {
-        console.error("Error handling OFFER:", e);
-      }
-    } else if (signal.type === "answer") {
-      if (!signal.sdp) return;
-      try { await pc.setRemoteDescription({ type: "answer", sdp: signal.sdp }); }
-      catch (e) { console.error("Error setting ANSWER:", e); }
-    } else if (signal.type === "candidate") {
-      try {
-        const candidate = JSON.parse(signal.candidate);
-        if (!pc || !pc.remoteDescription) pendingCandidates.push(candidate);
-        else await pc.addIceCandidate(candidate);
-      } catch (e) {
-        console.error("Lỗi khi thêm ICE candidate:", e, signal.candidate);
-      }
-    } else if (signal.type === "hangup") {
-      endCallUI();
-    }
-  });
-
-  // ✅ Chỉ người GỌI mới tạo offer
-  if (isCaller) {
-    await startCall();
-  }
-});
-});
 
 /* ==== Functions ==== */
 async function initWebRTC() {
@@ -202,6 +89,106 @@ async function initWebRTC() {
     }
 }
 
+// ✅ Function cho CALLER
+async function startCall() {
+    await initWebRTC();
+    if (!pc) return;
+    
+    const offer = await pc.createOffer();
+    await pc.setLocalDescription(offer);
+    sendSignal("offer", { sdp: offer.sdp });
+    console.log("📤 Offer sent");
+}
+
+// ✅ Function cho RECEIVER
+async function handleIncomingOffer(sdp) {
+    try {
+        // Đảm bảo WebRTC đã được khởi tạo
+        if (!pc) {
+            console.error("❌ PeerConnection chưa sẵn sàng!");
+            return;
+        }
+        
+        console.log("📥 Received offer, creating answer...");
+        
+        await pc.setRemoteDescription({ type: "offer", sdp: sdp });
+
+        // Thêm các ICE candidate đang chờ
+        for (const cand of pendingCandidates) {
+            try { 
+                await pc.addIceCandidate(cand);
+                console.log("✅ Added pending ICE candidate");
+            } catch (e) { 
+                console.warn("⚠️ Failed to add pending ICE:", e); 
+            }
+        }
+        pendingCandidates = [];
+
+        const answer = await pc.createAnswer();
+        await pc.setLocalDescription(answer);
+        sendSignal("answer", { sdp: answer.sdp });
+        console.log("📤 Answer sent");
+    } catch (e) {
+        console.error("❌ Error handling offer:", e);
+    }
+}
+
+/* ==== WebSocket Event Handler ==== */
+stomp.connect({}, async () => {
+    console.log("🔌 WebSocket connected");
+    
+    stomp.subscribe(`/queue/call/${userId}`, async msg => {
+        const signal = JSON.parse(msg.body);
+        console.log("📨 Received signal:", signal.type);
+
+        if (signal.type === "call_request") {
+            return;
+        }
+
+        if (signal.type === "offer") {
+            await handleIncomingOffer(signal.sdp); // ✅ Gọi function riêng
+        } 
+        else if (signal.type === "answer") {
+            if (!signal.sdp) return;
+            try { 
+                await pc.setRemoteDescription({ type: "answer", sdp: signal.sdp });
+                console.log("✅ Answer received and set");
+            } catch (e) { 
+                console.error("❌ Error setting answer:", e); 
+            }
+        } 
+        else if (signal.type === "candidate") {
+            try {
+                const candidate = JSON.parse(signal.candidate);
+                if (!pc || !pc.remoteDescription) {
+                    pendingCandidates.push(candidate);
+                    console.log("⏳ ICE candidate queued (no remote description yet)");
+                } else {
+                    await pc.addIceCandidate(candidate);
+                    console.log("✅ ICE candidate added");
+                }
+            } catch (e) {
+                console.error("❌ Error adding ICE candidate:", e);
+            }
+        } 
+        else if (signal.type === "hangup") {
+            endCallUI();
+        }
+    });
+
+    // ✅ QUAN TRỌNG: Cả 2 đều khởi tạo WebRTC NGAY
+    await initWebRTC();
+    
+    // ✅ Chỉ caller mới tạo offer
+    if (isCaller) {
+        console.log("👤 Role: CALLER");
+        await startCall();
+    } else {
+        console.log("👤 Role: RECEIVER - waiting for offer...");
+    }
+});
+
+
 function updateControlsUI() {
     // Đảm bảo nút Mic hoạt động
     const micTrack = localStream?.getAudioTracks()[0];
@@ -221,15 +208,7 @@ function updateControlsUI() {
     }
 }
 
-async function startCall() {
-    // ✅ FIX: bật cam/mic trước rồi mới tạo offer
-    await initWebRTC();
-    if (!pc) return;
-    
-    const offer = await pc.createOffer();
-    await pc.setLocalDescription(offer);
-    sendSignal("offer", { sdp: offer.sdp });
-}
+
 
 function sendSignal(type, data = {}) {
     stomp.send("/app/call.send", {}, JSON.stringify({

@@ -1,92 +1,275 @@
+:root {
+    --primary-bg: #1a1a1a;
+    --secondary-bg: #2d2d2d;
+    --accent-color: #2196f3;
+    --danger-color: #f44336;
+    --success-color: #4caf50;
+    --text-primary: #ffffff;
+    --text-secondary: #b0b0b0;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
 body {
-    margin: 0; 
-    font-family: Arial, sans-serif;
-    background: #0f0f0f; 
-    color: white;
-    display: flex; 
-    justify-content: center; 
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--primary-bg);
+    color: var(--text-primary);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
     align-items: center;
-    height: 100vh; 
+}
+
+#call-container {
+    width: 100%;
+    max-width: 1200px;
+    height: 100vh;
+    max-height: 800px;
+    display: flex;
+    flex-direction: column;
+    background: var(--secondary-bg);
+    border-radius: 12px;
+    overflow: hidden;
+    position: relative;
+}
+
+/* Call Status Bar */
+#call-status {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background: rgba(0,0,0,0.3);
+    backdrop-filter: blur(10px);
+    z-index: 100;
+}
+
+#call-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+#call-timer {
+    font-family: monospace;
+    font-size: 1.1em;
+}
+
+/* Video Container */
+#video-container {
+    flex: 1;
+    position: relative;
+    background: #000;
     overflow: hidden;
 }
 
-#call-box {
-    width: 90%; 
-    height: 90%;
-    background: #1b1b1b;
-    border-radius: 14px;
-    display: flex; 
-    flex-direction: column;
-    padding: 10px;
+#remote-stream {
+    width: 100%;
+    height: 100%;
     position: relative;
-}
-
-/* Video layout */
-#videos {
-    flex: 1; 
-    position: relative;
-    display: flex; 
-    justify-content: center; 
-    align-items: center;
 }
 
 #remoteVideo {
-    width: 100%; 
+    width: 100%;
     height: 100%;
-    background: #000; 
-    border-radius: 14px; 
     object-fit: cover;
 }
 
-#localVideo {
-    position: absolute; 
-    bottom: 15px; 
-    right: 15px;
-    width: 180px; 
-    height: 120px;
-    border: 2px solid white; 
-    border-radius: 10px;
-    object-fit: cover; 
-    background: black;
-}
-
-/* Top info */
-#caller-info {
-    position: absolute; 
-    top: 10px; 
-    left: 10px;
-    font-size: 18px; 
-    padding: 6px 12px;
-    background: rgba(0,0,0,0.6); 
+#local-stream {
+    position: absolute;
+    right: 20px;
+    bottom: 20px;
+    width: 280px;
+    height: 158px;
     border-radius: 8px;
-    z-index: 10; 
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
 }
 
-/* Call controls */
+#local-stream:hover {
+    transform: scale(1.05);
+}
+
+#localVideo {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    background: #000;
+}
+
+/* Controls */
 #controls {
-    display: flex; 
-    justify-content: center; 
-    gap: 16px;
-    margin-top: 15px; 
-    padding: 12px;
+    position: absolute;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 20px;
+    padding: 15px;
+    background: rgba(0,0,0,0.5);
+    backdrop-filter: blur(10px);
+    border-radius: 50px;
+    z-index: 100;
 }
 
 .control-btn {
-    width: 60px; 
-    height: 60px;
-    border-radius: 50%; 
-    border: none; 
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255,255,255,0.2);
+    color: white;
     cursor: pointer;
-    display: flex; 
-    align-items: center; 
+    display: flex;
+    align-items: center;
     justify-content: center;
-    font-size: 22px; 
-    transition: .2s;
+    transition: all 0.3s ease;
+}
+
+.control-btn:hover {
+    background: rgba(255,255,255,0.3);
+    transform: scale(1.1);
+}
+
+.control-btn i {
+    font-size: 1.2rem;
+}
+
+.control-btn.end-call {
+    background: var(--danger-color);
+}
+
+.control-btn.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Loading Spinner */
+.loading-spinner {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    color: var(--text-secondary);
+}
+
+.loading-spinner i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+/* Camera Off Overlay */
+.camera-off-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.camera-off-overlay i {
+    font-size: 2rem;
+    color: var(--text-secondary);
+}
+
+/* Incoming Call Dialog */
+#incoming-call {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--secondary-bg);
+    padding: 2rem;
+    border-radius: 12px;
+    text-align: center;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+}
+
+.call-header {
+    margin-bottom: 2rem;
+}
+
+.call-header i {
+    font-size: 3rem;
+    color: var(--accent-color);
+    margin-bottom: 1rem;
+}
+
+.call-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+}
+
+.call-actions button {
+    padding: 0.8rem 2rem;
+    border: none;
+    border-radius: 25px;
+    font-size: 1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+}
+
+.call-actions .accept {
+    background: var(--success-color);
     color: white;
 }
 
-#btnMic { background: #3a3a3a; }
-#btnCam { background: #3a3a3a; }
-#btnEnd { background: #ff3b3b; }
+.call-actions .reject {
+    background: var(--danger-color);
+    color: white;
+}
 
-.control-btn:hover { opacity: .8; }
+/* Connection Status */
+#connection-status {
+    position: absolute;
+    top: 60px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 8px 16px;
+    border-radius: 20px;
+    background: rgba(0,0,0,0.6);
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+#connection-status.visible {
+    opacity: 1;
+}
+
+/* Utility Classes */
+.hidden {
+    display: none !important;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    #local-stream {
+        width: 120px;
+        height: 180px;
+    }
+
+    .control-btn {
+        width: 45px;
+        height: 45px;
+    }
+
+    #call-status {
+        font-size: 0.9rem;
+    }
+}
