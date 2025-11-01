@@ -56,7 +56,7 @@ import javax.swing.JOptionPane;
 public class NetworkService {
 
     // ✅ THAY ĐỔI: Bỏ 'final' và sửa 'API_BASE_URL'
-    private static String SERVER_IP = "192.168.92.1";
+    private static String SERVER_IP = "192.168.1.230";
     public static String BASE_URL = "http://" + SERVER_IP + ":8080/api/";
     public static String WS_URL = "ws://" + SERVER_IP + ":8080/ws/raw";
     

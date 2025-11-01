@@ -391,41 +391,44 @@ public class ChatForm extends JPanel {
          msg.setDecryptedContent(DECRYPT_ERROR_PLACEHOLDER);
     }
     
-    private void startCall(String type) {
-        System.out.println("🚀 Starting call to " + friendId + " type=" + type);
+private void startCall(String type) {
+    System.out.println("🚀 Starting call to " + friendId + " type=" + type);
 
-        NetworkService.startCall(currentUserId, friendId, type)
-            .thenAccept(callId -> {
+    NetworkService.startCall(currentUserId, friendId, type)
+        .thenAccept(callId -> {
 
-                // gửi tín hiệu gọi qua WebSocket
-                String frame = """
-                SEND
-                destination:/app/call.send
-                content-type:application/json
+            String frame = """
+            SEND
+            destination:/app/call.send
+            content-type:application/json
 
-                {"type":"call_request","callerId":%d,"receiverId":%d,"callType":"%s"}\0
-                """.formatted(currentUserId, friendId, type);
+            {"type":"call_request","callerId":%d,"receiverId":%d,"callType":"%s","callId":%d}\0
+            """.formatted(currentUserId, friendId, type, callId);
 
-                ws.send(frame);
+            ws.send(frame);
 
-                // mở UI cuộc gọi
-                    SwingUtilities.invokeLater(() -> {
-                        String url = "http://localhost:8080/call.html"
-                                + "?callId=" + callId
-                                + "&userId=" + currentUserId
-                                + "&peerId=" + friendId
-                                + "&type=" + type;
+            SwingUtilities.invokeLater(() -> {
+                String serverIp = NetworkService.getServerIp();
 
-                        try {
-                            Desktop.getDesktop().browse(new URI(url));
-                        } catch (Exception e) { e.printStackTrace(); }
-                    });
-            })
-            .exceptionally(ex -> {
-                JOptionPane.showMessageDialog(this, "Call error: " + ex.getMessage());
-                return null;
+                String url = "https://" + serverIp + ":8443/call/call.html"
+                        + "?callId=" + callId
+                        + "&userId=" + currentUserId
+                        + "&peerId=" + friendId
+                        + "&type=" + type;
+
+                try {
+                    Desktop.getDesktop().browse(new URI(url));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             });
-    }
+        })
+        .exceptionally(ex -> {
+            JOptionPane.showMessageDialog(this, "Call error: " + ex.getMessage());
+            return null;
+        });
+}
+
 
 
     private void loadHistory() {

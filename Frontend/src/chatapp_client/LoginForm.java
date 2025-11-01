@@ -207,78 +207,97 @@ public class LoginForm extends JPanel {
     /**
      * ✅ SỬA ĐỔI: Sử dụng NetworkService.login() và khởi tạo CryptoService Lớp 2.
      */
-    private void performLogin() {
-        String usernameOrSdt = txtUser.getText().trim();
-        String password = new String(txtPass.getPassword()); // Plaintext
+private void performLogin() {
+    String usernameOrSdt = txtUser.getText().trim();
+    String password = new String(txtPass.getPassword()); // Plaintext
 
-        if (usernameOrSdt.isEmpty() || password.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Vui lòng nhập tên đăng nhập/SĐT và mật khẩu!", "Lỗi", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-
-        final Component parentComponent = this;
-        btnLogin.setEnabled(false);
-        btnLogin.setText("Đang đăng nhập...");
-
-        // 1. Gọi API đăng nhập
-        NetworkService.login(usernameOrSdt, password)
-            .thenAccept(loginResponse -> {
-                // Đăng nhập thành công (trên luồng async)
-                SwingUtilities.invokeLater(() -> {
-
-                    // 2. Khởi tạo/Tải khóa E2EE Lớp 2
-                    // (Giải mã Private Key bằng mật khẩu)
-                    boolean keysInitialized = CryptoService.initialize(
-                        loginResponse.getUserId(),
-                        password, // Dùng plaintext password
-                        loginResponse.getEncPrivateKey(),
-                        loginResponse.getSalt(),
-                        loginResponse.getIv()
-                    );
-
-                    if (!keysInitialized) {
-                        System.err.println("Login: LỖI NGHIÊM TRONG! Giải mã Private Key thất bại!");
-                        JOptionPane.showMessageDialog(parentComponent, "Lỗi E2EE: Không thể giải mã khóa cá nhân (có thể do sai mật khẩu hoặc dữ liệu hỏng).", "Lỗi E2EE", JOptionPane.ERROR_MESSAGE);
-                        btnLogin.setEnabled(true);
-                        btnLogin.setText("Đăng nhập");
-                        return; // Không tiếp tục
-                    }
-
-                    // 3. Tải public key lên server (Để đảm bảo server có key mới nhất)
-                    String pubKeyString = CryptoService.publicKeyToString(CryptoService.getPublicKey());
-                    if (pubKeyString != null) {
-                        NetworkService.uploadPublicKey(loginResponse.getUserId(), pubKeyString)
-                            .thenAccept(success -> System.out.println("Login: Public Key Upload (Đồng bộ): " + success));
-                    } else {
-                        System.err.println("Login: Không thể lấy public key để tải lên.");
-                        // (Tiếp tục vì private key đã được tải)
-                    }
-
-                    // 4. Chuyển sang màn hình chính
-                    mainForm.showMainApp(loginResponse.toUser());
-                    clearFields();
-                    btnLogin.setEnabled(true);
-                    btnLogin.setText("Đăng nhập");
-                });
-            })
-            .exceptionally(ex -> {
-                // Xử lý lỗi (ví dụ: 401 Sai mật khẩu)
-                String errorMessage = ex.getCause() != null ? ex.getCause().getMessage() : ex.getMessage();
-                System.err.println("Lỗi đăng nhập: " + errorMessage);
-                SwingUtilities.invokeLater(() -> {
-                    // ✅ Cập nhật: Hiển thị lỗi thân thiện hơn
-                    String displayError = errorMessage;
-                    if (errorMessage.contains("Connection refused") || errorMessage.contains("timed out")) {
-                        displayError = "Không thể kết nối đến máy chủ. Vui lòng kiểm tra IP và tường lửa.";
-                    } else if (errorMessage.contains("401")) { // Giả định 401 là sai pass
-                         displayError = "Tên đăng nhập hoặc mật khẩu không đúng.";
-                    }
-                
-                    JOptionPane.showMessageDialog(parentComponent, "Đăng nhập thất bại: " + displayError, "Lỗi Đăng Nhập", JOptionPane.ERROR_MESSAGE);
-                    btnLogin.setEnabled(true);
-                    btnLogin.setText("Đăng nhập");
-                });
-                return null;
-            });
+    if (usernameOrSdt.isEmpty() || password.isEmpty()) {
+        JOptionPane.showMessageDialog(this, "Vui lòng nhập tên đăng nhập/SĐT và mật khẩu!", "Lỗi", JOptionPane.WARNING_MESSAGE);
+        return;
     }
+
+    final Component parentComponent = this;
+    btnLogin.setEnabled(false);
+    btnLogin.setText("Đang đăng nhập...");
+
+    // 1. Gọi API đăng nhập
+    NetworkService.login(usernameOrSdt, password)
+        .thenAccept(loginResponse -> {
+            // Đăng nhập thành công (trên luồng async)
+            SwingUtilities.invokeLater(() -> {
+
+                // 2. Khởi tạo/Tải khóa E2EE Lớp 2
+                // (Giải mã Private Key bằng mật khẩu)
+                boolean keysInitialized = CryptoService.initialize(
+                    loginResponse.getUserId(),
+                    password, // Dùng plaintext password
+                    loginResponse.getEncPrivateKey(),
+                    loginResponse.getSalt(),
+                    loginResponse.getIv()
+                );
+
+                if (!keysInitialized) {
+                    System.err.println("Login: LỖI NGHIÊM TRONG! Giải mã Private Key thất bại!");
+                    JOptionPane.showMessageDialog(parentComponent, "Lỗi E2EE: Không thể giải mã khóa cá nhân (có thể do sai mật khẩu hoặc dữ liệu hỏng).", "Lỗi E2EE", JOptionPane.ERROR_MESSAGE);
+                    btnLogin.setEnabled(true);
+                    btnLogin.setText("Đăng nhập");
+                    return; // Không tiếp tục
+                }
+
+                // 3. Tải public key lên server (Để đảm bảo server có key mới nhất)
+                String pubKeyString = CryptoService.publicKeyToString(CryptoService.getPublicKey());
+                if (pubKeyString != null) {
+                    NetworkService.uploadPublicKey(loginResponse.getUserId(), pubKeyString)
+                        .thenAccept(success -> System.out.println("Login: Public Key Upload (Đồng bộ): " + success));
+                } else {
+                    System.err.println("Login: Không thể lấy public key để tải lên.");
+                    // (Tiếp tục vì private key đã được tải)
+                }
+
+                // 4. Chuyển sang màn hình chính
+                mainForm.showMainApp(loginResponse.toUser());
+                clearFields();
+                btnLogin.setEnabled(true);
+                btnLogin.setText("Đăng nhập");
+            });
+        })
+        .exceptionally(ex -> {
+            // Xử lý lỗi (ví dụ: 401 Sai mật khẩu)
+            
+            // ✅ FIX: Lấy error message an toàn, tránh null
+            Throwable cause = ex.getCause() != null ? ex.getCause() : ex;
+            String errorMessage = cause.getMessage();
+            
+            // ✅ Kiểm tra null trước khi sử dụng
+            if (errorMessage == null || errorMessage.isEmpty()) {
+                errorMessage = "Lỗi không xác định: " + cause.getClass().getSimpleName();
+            }
+            
+            final String finalErrorMessage = errorMessage; // Để dùng trong lambda
+            System.err.println("Lỗi đăng nhập: " + finalErrorMessage);
+            
+            SwingUtilities.invokeLater(() -> {
+                // ✅ Hiển thị lỗi thân thiện hơn
+                String displayError = finalErrorMessage;
+                
+                if (finalErrorMessage.contains("Connection refused") || finalErrorMessage.contains("timed out")) {
+                    displayError = "Không thể kết nối đến máy chủ. Vui lòng kiểm tra IP và tường lửa.";
+                } else if (finalErrorMessage.contains("401")) {
+                    displayError = "Tên đăng nhập hoặc mật khẩu không đúng.";
+                } else if (finalErrorMessage.contains("UnknownHostException")) {
+                    displayError = "Không thể tìm thấy máy chủ. Vui lòng kiểm tra địa chỉ IP.";
+                } else if (finalErrorMessage.contains("SocketTimeoutException")) {
+                    displayError = "Kết nối bị timeout. Máy chủ không phản hồi.";
+                }
+            
+                JOptionPane.showMessageDialog(parentComponent, 
+                    "Đăng nhập thất bại: " + displayError, 
+                    "Lỗi Đăng Nhập", 
+                    JOptionPane.ERROR_MESSAGE);
+                btnLogin.setEnabled(true);
+                btnLogin.setText("Đăng nhập");
+            });
+            return null;
+        });
+}
 }

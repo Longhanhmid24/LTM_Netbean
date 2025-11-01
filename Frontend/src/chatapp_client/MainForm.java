@@ -201,28 +201,32 @@ public class MainForm extends javax.swing.JFrame {
                 }
             }
 
-            private void acceptCall(CallSignal signal) {
-                try {
-                    String callUrl = "http://localhost:8080/call.html"
-                            + "?callId=" + signal.getCallId()
-                            + "&userId=" + loggedInUserId
-                            + "&peerId=" + signal.getCallerId()
-                            + "&type=" + signal.getType();
+private void acceptCall(CallSignal signal) {
+    try {
+        String serverIp = NetworkService.getServerIp();
 
-                    Desktop.getDesktop().browse(new URI(callUrl));
-                } catch (Exception e) { e.printStackTrace(); }
+        String callUrl = "https://" + serverIp + ":8443/call/call.html"
+                + "?callId=" + signal.getCallId()
+                + "&userId=" + loggedInUserId
+                + "&peerId=" + signal.getCallerId()
+                + "&type=" + signal.getType();
 
-                // gửi answer signal
-                String frame = """
-                    SEND
-                    destination:/app/call.send
-                    content-type:application/json
+        Desktop.getDesktop().browse(new URI(callUrl));
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
 
-                    {"type":"answer","callerId":%d,"receiverId":%d,"callId":%d}\0
-                    """.formatted(signal.getReceiverId(), signal.getCallerId(), signal.getCallId());
+    // Gửi answer
+    String frame = """
+        SEND
+        destination:/app/call.send
+        content-type:application/json
 
-                sharedWebSocketClient.send(frame);
-            }
+        {"type":"answer","callerId":%d,"receiverId":%d,"callId":%d}\0
+        """.formatted(signal.getReceiverId(), signal.getCallerId(), signal.getCallId());
+
+    sharedWebSocketClient.send(frame);
+}
 
             private void rejectCall(CallSignal signal) {
                 String frame = """

@@ -24,6 +24,7 @@ D:\DA_LTM\LTM_Netbean\Backend\chatserver\src\main\java\com\app\chatserver\messag
 D:\DA_LTM\LTM_Netbean\Backend\chatserver\src\main\java\com\app\chatserver\controller_users\UserController.java
 D:\DA_LTM\LTM_Netbean\Backend\chatserver\src\main\java\com\app\chatserver\ChatserverApplication.java
 D:\DA_LTM\LTM_Netbean\Backend\chatserver\src\main\java\com\app\chatserver\media_file\ChatHistoryController.java
+D:\DA_LTM\LTM_Netbean\Backend\chatserver\src\main\java\com\app\chatserver\Config\SslConfig.java
 D:\DA_LTM\LTM_Netbean\Backend\chatserver\src\main\java\com\app\chatserver\group\GroupController.java
 D:\DA_LTM\LTM_Netbean\Backend\chatserver\src\main\java\com\app\chatserver\model\GroupMessage.java
 D:\DA_LTM\LTM_Netbean\Backend\chatserver\src\main\java\com\app\chatserver\call_video\WebSocketConfig_call_video.java

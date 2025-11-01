@@ -56,6 +56,8 @@ public class IncomingCallDialog extends JDialog {
             onAccept.run();
             dispose();
         });
+        
+        
 
         JButton btnReject = new JButton("Từ chối");
         btnReject.setBackground(Color.RED);
