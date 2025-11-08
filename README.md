@@ -195,7 +195,7 @@
 3. **Bật** tùy chọn:  
    `Insecure origins treated as secure`
 4. **Thêm địa chỉ server** vào danh sách: `http://`, `[server_ip]`, và `:8080` (Ví dụ: `http://10.15.193.245:8080`)
-5. Nhấn **Relaunch** để khởi động lại Browser
+5. Nhấn **Relaunch** hoặc **Restart** (Nếu 1 trong 2 thông báo hiện lên) để khởi động lại Browser
 
 > Sau khi bật, WebView sẽ **cho phép dùng camera & micro** dù kết nối HTTP (không có HTTPS)
 
