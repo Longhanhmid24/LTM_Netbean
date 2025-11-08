@@ -189,8 +189,8 @@
 
 - **Chỉ cần làm 1 lần trên máy client**
 
-1. Mở **Google Chrome**
-2. Vào: `chrome://flags/#unsafely-treat-insecure-origin-as-secure`
+1. Mở **Google Chrome** (hay bất kỳ trình duyệt Chrome-based)
+2. Vào: `chrome://flags/#unsafely-treat-insecure-origin-as-secure` hoặc `[chrome-based_browser_name]://flags/#unsafely-treat-insecure-origin-as-secure`
 3. **Bật** tùy chọn:  
    `Insecure origins treated as secure`
 4. **Thêm địa chỉ server** vào danh sách:
