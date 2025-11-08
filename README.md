@@ -215,7 +215,7 @@
 
 ## 📡 Kết nối LAN (Không cần Internet)
 
-1. Chạy server trên máy chủ (IP: `192.168.x.x`)
+1. Chạy server trên máy chủ (VD IP: `192.168.x.x`)
 2. Client nhập IP server tại **Login → Settings**
 3. Kết nối thành công → chat, gọi, gửi file trong mạng nội bộ
 
