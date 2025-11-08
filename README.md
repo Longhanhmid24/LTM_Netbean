@@ -216,7 +216,7 @@ Allow this time
 
 **Kết quả**:  
 - Gọi thoại/video hoạt động bình thường  
-- Âm thanh & hình ảnh rõ tương đối  
+- Âm thanh & hình ảnh rõ nét 
 - Không cần HTTPS nếu đã bật flag
 
 ---
