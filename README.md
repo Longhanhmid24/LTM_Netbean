@@ -195,7 +195,7 @@
    `Insecure origins treated as secure`
 4. **Thêm địa chỉ server** vào danh sách:
 http://[IP_CUA_SERVER]:8080
-Ví dụ: `http://10.15.193.245:8080`
+. Ví dụ: `http://10.15.193.245:8080`
 5. Nhấn **Relaunch** để khởi động lại Chrome
 
 > Sau khi bật, WebView sẽ **cho phép dùng camera & micro** dù kết nối HTTP (không có HTTPS)
