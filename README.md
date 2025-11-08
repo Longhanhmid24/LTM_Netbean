@@ -21,7 +21,7 @@
 | Gọi nhóm                   | Not Done   | Chưa triển khai |
 | Quản lý bạn bè             | Done       | Yêu cầu, chấp nhận, từ chối |
 | Quản lý nhóm               | Done       | Tạo, thêm thành viên, xóa |
-| Tìm kiếm, chặn người dùng  | Partially Done       | Trong danh bạ, chưa có chặn người dùng |
+| Tìm kiếm, chặn người dùng  | Partially Done       | Có thể tìm kiếm người dùng, chưa có chặn người dùng |
 | Thông báo đẩy              | Done       | Real-time qua STOMP |
 
 > **Lưu ý**: **Trạng thái online/offline chưa được triển khai**.
@@ -135,12 +135,12 @@
 ## ✅ Tác vụ cơ bản
 
 ### 1. **Tác vụ đăng ký tài khoản**
-1. Người dùng nhập thông tin (tên, email, số điện thoại, mật khẩu).
+1. Người dùng nhập thông tin (username, số điện thoại, mật khẩu).
 2. Kiểm tra trùng lặp và lưu thông tin **mã hóa** vào cơ sở dữ liệu.
 3. Client nhận thông báo **đăng ký thành công** hoặc **lỗi** (ví dụ: tài khoản đã tồn tại).
 
 ### 2. **Tác vụ đăng nhập**
-1. Gửi thông tin đăng nhập (username, mật khẩu).
+1. Gửi thông tin đăng nhập (username hoặc số điện thoại, mật khẩu).
 2. Giải mã mật khẩu và so sánh với thông tin trong DB → **xác nhận** → tạo **phiên làm việc (session)**.
 3. Người dùng có thể bắt đầu sử dụng các chức năng.
 
@@ -256,14 +256,14 @@ Allow this time
 3. Kết nối thành công → chat, gọi, gửi file trong mạng
 
 > **Swagger UI**: `http://[server_ip]:8080/swagger-ui.html`  
-> **Trang demo và gọi mẫu**: `backend/src/main/resources/static/chat.html`, `backend/src/main/resources/static/call.html`
+> **Trang demo và gọi mẫu**: `backend/chatserver/src/main/resources/static/chat.html`, `backend/chatserver/src/main/resources/static/call.html`
 
 ---
 
 ## 📄 Giấy phép
 
-Dự án học tập – **LTM NetBean**  
-Không sử dụng thương mại.
+Dự án học tập – **LTM_NetBean**  
+Không sử dụng cho mục đích thương mại.
 
 ---
 
