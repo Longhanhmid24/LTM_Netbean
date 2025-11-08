@@ -54,8 +54,9 @@
 
 > **Yêu cầu hệ thống**:
 > - **VLC Media Player 64-bit** (để phát video/âm thanh)
-> - **Trình duyệt hiện đại** (Chrome/Firefox) để **cho phép quyền truy cập camera & micro** khi gọi
-
+> - **Trình duyệt hiện đại** (Chrome-based) để **cho phép quyền truy cập camera & micro** khi sử dụng chức năng gọi
+> - **Java IDE** Netbeans hoặc các IDE khác, phiên bản mới nhất để hỗ trợ code và script
+> - **Java JDK** Version 20+ trở lên
 ---
 
 ## 🏗 Kiến trúc hệ thống (3 lớp chính)
