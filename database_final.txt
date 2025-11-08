@@ -5,6 +5,9 @@
 SET NAMES utf8mb4;
 SET CHARACTER SET utf8mb4;
 
+CREATE DATABASE chat_app
+USE DATABASE chat_app
+
 -- 1. BẢNG USERS (NGƯỜI DÙNG)
 -- ✅ ĐÃ THÊM: public_key (RSA)
 -- ✅ ĐÃ THÊM: enc_private_key (RSA Private Key đã được mã hóa bằng mật khẩu)
