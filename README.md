@@ -249,14 +249,14 @@ Allow this time
 
 ---
 
-## 📡 Kết nối LAN (Không cần Internet)
+## 📡 Kết nối Server-Client
 
-1. Chạy server trên máy chủ (VD IP: `192.168.x.x`)
+1. Chạy server trên máy chủ (Ví dụ IP: `192.168.x.x`)
 2. Client nhập IP server tại **Login → Settings**
-3. Kết nối thành công → chat, gọi, gửi file trong mạng nội bộ
+3. Kết nối thành công → chat, gọi, gửi file trong mạng
 
-> **Swagger UI**: `http://[IP]:8080/swagger-ui.html`  
-> **Trang gọi mẫu**: `src/main/resources/static/call.html`
+> **Swagger UI**: `http://[server_ip]:8080/swagger-ui.html`  
+> **Trang demo và gọi mẫu**: `backend/src/main/resources/static/chat.html`, `backend/src/main/resources/static/call.html`
 
 ---
 
