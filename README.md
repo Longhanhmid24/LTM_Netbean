@@ -20,6 +20,7 @@
 | Gọi thoại/video 1:1        | Done       | Dùng **WebRTC + trang HTML** |
 | Gọi nhóm                   | Not Done   | Chưa triển khai |
 | Quản lý bạn bè             | Done       | Yêu cầu, chấp nhận, từ chối |
+| Quản lý nhóm               | Done       | Tạo, thêm thành viên, xóa |
 | Tìm kiếm, chặn người dùng  | Done       | Trong danh bạ |
 | Thông báo đẩy              | Done       | Real-time qua STOMP |
 
@@ -183,6 +184,21 @@
   - Người dùng **phải cho phép quyền truy cập camera & micro** trong trình duyệt mặc định của người dùng.
   - Nếu dùng **HTTP (cổng 8080)** → cần **Allow Insecure Content** trong trình duyệt.
   - **Khuyến nghị**: Dùng **WSS + HTTPS (cổng 8443)** để tránh cảnh báo.
+
+## Cấu hình trình duyệt để dùng camera & micro (khi dùng HTTP)
+
+- **Chỉ cần làm 1 lần trên máy client**
+
+1. Mở **Google Chrome**
+2. Vào: `chrome://flags/#unsafely-treat-insecure-origin-as-secure`
+3. **Bật** tùy chọn:  
+   `Insecure origins treated as secure`
+4. **Thêm địa chỉ server** vào danh sách:
+http://[IP_CUA_SERVER]:8080
+Ví dụ: `http://10.15.193.245:8080`
+5. Nhấn **Relaunch** để khởi động lại Chrome
+
+> Sau khi bật, WebView sẽ **cho phép dùng camera & micro** dù kết nối HTTP (không có HTTPS)
 
 ---
 
