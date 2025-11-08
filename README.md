@@ -21,7 +21,7 @@
 | Gọi nhóm                   | Not Done   | Chưa triển khai |
 | Quản lý bạn bè             | Done       | Yêu cầu, chấp nhận, từ chối |
 | Quản lý nhóm               | Done       | Tạo, thêm thành viên, xóa |
-| Tìm kiếm, chặn người dùng  | Partially Done       | Có thể tìm kiếm người dùng, chưa có chặn người dùng |
+| Tìm kiếm, chặn người dùng  | Partially Done       | Có thể tìm kiếm người dùng,nhưng chưa có chặn người dùng |
 | Thông báo đẩy              | Done       | Real-time qua STOMP |
 
 > **Lưu ý**: **Trạng thái online/offline chưa được triển khai**.
