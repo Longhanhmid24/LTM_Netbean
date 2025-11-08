@@ -193,10 +193,31 @@
 2. Vào: `chrome://flags/#unsafely-treat-insecure-origin-as-secure` hoặc `[chrome-based_browser_name]://flags/#unsafely-treat-insecure-origin-as-secure`
 3. **Bật** tùy chọn:  
    `Insecure origins treated as secure`
-4. **Thêm địa chỉ server** vào danh sách: http://[server_ip]:8080 (Ví dụ: `http://10.15.193.245:8080`)
+4. **Thêm địa chỉ server** vào danh sách: `http://`, **server_ip**, và `:8080` (Ví dụ: `http://10.15.193.245:8080`)
 5. Nhấn **Relaunch** để khởi động lại Chrome
 
 > Sau khi bật, WebView sẽ **cho phép dùng camera & micro** dù kết nối HTTP (không có HTTPS)
+
+## Khi gọi thoại/video (sau khi bật flag)
+
+1. Nhấn nút **Gọi** trong ứng dụng
+2. **Popup yêu cầu quyền** sẽ hiện:
+> **"Trang này muốn truy cập camera và micro"**
+3. **Chọn**:
+Allow this time
+(hoặc **Allow** nếu có)
+
+> **Lưu ý**:  
+> - Nếu chọn **Block** → gọi sẽ **không có âm thanh/hình ảnh**  
+> - Quyền chỉ cần cấp **1 lần** cho mỗi phiên làm việc  
+> - Không cần cấp lại nếu đã **Allow this time**
+
+---
+
+**Kết quả**:  
+- Gọi thoại/video hoạt động bình thường  
+- Âm thanh & hình ảnh rõ tương đối  
+- Không cần HTTPS nếu đã bật flag
 
 ---
 
